@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pdfer", "Pdfer\Pdfer.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pdfer.TestConsole", "Pdfer.TestConsole\Pdfer.TestConsole.csproj", "{130051DC-3C21-4898-8333-A22C6A267A6C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pdfer.Tests.Unit", "Pdfer.Tests.Unit\Pdfer.Tests.Unit.csproj", "{500D8851-9B0F-47A9-968E-170D1DB6368D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{130051DC-3C21-4898-8333-A22C6A267A6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{130051DC-3C21-4898-8333-A22C6A267A6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{130051DC-3C21-4898-8333-A22C6A267A6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{500D8851-9B0F-47A9-968E-170D1DB6368D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{500D8851-9B0F-47A9-968E-170D1DB6368D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{500D8851-9B0F-47A9-968E-170D1DB6368D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{500D8851-9B0F-47A9-968E-170D1DB6368D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
