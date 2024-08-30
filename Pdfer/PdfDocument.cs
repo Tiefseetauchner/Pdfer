@@ -6,17 +6,21 @@ namespace Pdfer;
 public class PdfDocument(
   Header header,
   Body body,
-  XRefTable xrefTable,
+  XRefTable xRefTable,
   Trailer trailer)
 {
-  public PdfVersion PdfVersion { get; set; } = header.Version;
+  public PdfVersion PdfVersion => Header.Version;
+  public Header Header => header;
+  public Body Body => body;
+  public XRefTable XRefTable => xRefTable;
+  public Trailer Trailer => trailer;
 
   public void ToStream(Stream stream)
   {
     stream.WriteByte(100);
-    Console.WriteLine(header);
-    Console.WriteLine(body);
-    Console.WriteLine(xrefTable);
-    Console.WriteLine(trailer);
+    Console.WriteLine(Header);
+    Console.WriteLine(Body);
+    Console.WriteLine(XRefTable);
+    Console.WriteLine(Trailer);
   }
 }

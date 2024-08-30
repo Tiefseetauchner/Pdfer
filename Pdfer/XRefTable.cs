@@ -2,5 +2,6 @@ using System.Collections.Generic;
 
 namespace Pdfer;
 
-public record XRefTable(
-  List<XRefEntry> XRefEntries);
+public class XRefTable : Dictionary<ObjectIdentifier, XRefEntry>
+{
+}

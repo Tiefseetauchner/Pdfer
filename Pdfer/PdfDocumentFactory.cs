@@ -23,11 +23,14 @@ public class PdfDocumentFactory
 
   public async Task<PdfDocument> Parse(Stream stream)
   {
+    using var streamReader = new StreamReader(stream);
+
     var header = await GetHeader(stream);
     var trailer = await GetTrailer(stream);
-    //var xrefTable = await GetXrefTable(stream);
+    var xrefTable = await GetXrefTable(streamReader, trailer.XRefByteOffset);
+    var body = await GetBody(streamReader, xrefTable);
 
-    return new PdfDocument(header, new Body(new Dictionary<ObjectIdentifier, DocumentObject>()), new XRefTable([]), trailer);
+    return new PdfDocument(header, new Body(new Dictionary<ObjectIdentifier, DocumentObject>()), xrefTable, trailer);
   }
 
   // TODO (lena): Operate on Stream
@@ -44,10 +47,17 @@ public class PdfDocumentFactory
         .Any())
       throw new InvalidOperationException("Invalid header");
 
-    if (buffer[5] != '1' && buffer[6] != '.')
+    if (buffer[5] != '1' || buffer[6] != '.')
       throw new InvalidOperationException($"Invalid version number '{Encoding.UTF8.GetString(buffer[5..])}'");
 
-    var pdfVersion = (char)buffer[7] switch
+    var pdfVersion = GetPdfVersion(buffer);
+
+    // TODO (lena): do containsBinaryDataHeader check
+    return new Header(pdfVersion, true);
+  }
+
+  private static PdfVersion GetPdfVersion(byte[] buffer) =>
+    (char)buffer[7] switch
     {
       '0' => PdfVersion.Pdf10,
       '1' => PdfVersion.Pdf11,
@@ -60,15 +70,25 @@ public class PdfDocumentFactory
       _ => throw new InvalidOperationException($"Invalid version number '{Encoding.UTF8.GetString(buffer[5..])}'")
     };
 
-    return new Header(pdfVersion, true);
-  }
-
   private async Task<Trailer> GetTrailer(Stream stream)
   {
     await using var reverseStream = new ReverseStream(stream);
     reverseStream.Position = 0;
     using var streamReader = new StreamReader(reverseStream);
 
+    await VerifyEofExists(streamReader);
+
+    var xrefOffset = await GetXrefOffset(streamReader);
+
+    await VerifyStartxrefExists(streamReader);
+
+    // TODO (lena): Parse Trailer Dictionary
+
+    return new Trailer([], xrefOffset);
+  }
+
+  private async Task VerifyEofExists(StreamReader streamReader)
+  {
     var eofFound = false;
     while (!eofFound)
     {
@@ -82,18 +102,102 @@ public class PdfDocumentFactory
 
       eofFound = true;
     }
+  }
 
-    var xrefOffset = await ReadReverseLine(streamReader);
+  private async Task<long> GetXrefOffset(StreamReader streamReader)
+  {
+    var xrefOffsetString = await ReadReverseLine(streamReader);
+    var xrefOffsetParsed = long.TryParse(xrefOffsetString, out var xrefOffset);
+    if (!xrefOffsetParsed)
+      throw new InvalidOperationException("xref offset is not a number");
+    return xrefOffset;
+  }
+
+  private async Task VerifyStartxrefExists(StreamReader streamReader)
+  {
     var startXref = await ReadReverseLine(streamReader);
 
     if (startXref != "startxref")
       throw new InvalidOperationException("No 'startxref' keyword found");
-
-    // TODO (tiefseetauchner): Parse Trailer Dictionary
-
-    return new Trailer([], long.Parse(xrefOffset));
   }
+
 
   private async Task<string> ReadReverseLine(StreamReader streamReader) =>
     string.Concat((await streamReader.ReadLineAsync())?.Reverse() ?? throw new IOException("Unexpected end of stream"));
+
+  private async Task<XRefTable> GetXrefTable(StreamReader streamReader, long xrefOffset)
+  {
+    streamReader.BaseStream.Position = xrefOffset;
+
+    var xRefTable = new XRefTable();
+    var line = await streamReader.ReadLineAsync();
+
+    if (line != "xref")
+      throw new InvalidOperationException("No 'xref' keyword found");
+
+    while ((line = await streamReader.ReadLineAsync()) != null && line != "trailer")
+    {
+      var (objectNumber, objectsInSection) = ParseSubsectionHeader(line);
+
+      await AddXRefEntriesInSubsection(objectsInSection, streamReader, objectNumber, xRefTable);
+    }
+
+    return xRefTable;
+  }
+
+  private async Task AddXRefEntriesInSubsection(int objectsInSection, StreamReader streamReader, int objectNumber, XRefTable xRefTable)
+  {
+    for (var i = 0; i < objectsInSection; i++)
+    {
+      var line = await streamReader.ReadLineAsync();
+
+      if (string.IsNullOrWhiteSpace(line))
+        throw new IOException("Unexpected end of stream");
+
+      var (objectIdentifier, xRefEntry) = GetXrefEntry(line, objectNumber);
+      xRefTable.Add(objectIdentifier, xRefEntry);
+      objectNumber++;
+    }
+  }
+
+  private (int ObjectNumber, int RemainingInSection) ParseSubsectionHeader(string line)
+  {
+    var subsectionHeaderParts = line.Split(' ');
+    return (int.Parse(subsectionHeaderParts[0]), int.Parse(subsectionHeaderParts[1]));
+  }
+
+  private (ObjectIdentifier, XRefEntry) GetXrefEntry(string line, int objectNumber)
+  {
+    var objectEntryParts = line.Split(' ');
+    var offset = long.Parse(objectEntryParts[0]);
+    var generationNumber = int.Parse(objectEntryParts[1]);
+    var type = objectEntryParts[2] switch
+    {
+      "f" => XRefEntryType.Free,
+      "n" => XRefEntryType.Used,
+      _ => throw new InvalidOperationException($"Invalid xref entry type '{objectEntryParts[2]}'")
+    };
+    return (new ObjectIdentifier(objectNumber, generationNumber), new XRefEntry(offset, type));
+  }
+
+  private async Task<Body> GetBody(StreamReader streamReader, XRefTable xRefTable)
+  {
+    foreach (var (objectIdentifier, xRefEntry) in xRefTable)
+    {
+      if (xRefEntry.Flag == XRefEntryType.Free)
+        continue;
+
+      streamReader.BaseStream.Position = xRefEntry.Position;
+      streamReader.DiscardBufferedData();
+
+      var objectIdentifierString = await streamReader.ReadLineAsync();
+
+      if (objectIdentifierString == null)
+        throw new IOException("Unexpected end of stream");
+
+      Console.WriteLine(await streamReader.ReadLineAsync());
+    }
+
+    return new Body(new Dictionary<ObjectIdentifier, DocumentObject>());
+  }
 }
