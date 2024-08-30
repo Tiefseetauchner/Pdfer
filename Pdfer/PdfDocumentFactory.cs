@@ -4,12 +4,23 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pdfer.Objects;
 
 namespace Pdfer;
 
-public class PdfDocumentFactory
+public class PdfDocumentFactory(
+  IStreamHelper streamHelper,
+  IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
+  IPdfDictionaryHelper pdfDictionaryHelper)
 {
-  public static PdfDocumentFactory Instance { get; } = new PdfDocumentFactory();
+  public static PdfDocumentFactory Instance { get; } = new(
+    new StreamHelper(),
+    new DictionaryObjectReader(
+      new StreamHelper(),
+      new PdfDictionaryHelper(
+        new StreamHelper())),
+    new PdfDictionaryHelper(
+      new StreamHelper()));
 
   private const int HeaderLengthInBytes = 8;
   private const string HeaderBytes = "%PDF-";
@@ -28,9 +39,9 @@ public class PdfDocumentFactory
     var header = await GetHeader(stream);
     var trailer = await GetTrailer(stream, streamReader);
     var xrefTable = await GetXrefTable(streamReader, trailer.XRefByteOffset);
-    var body = await GetBody(streamReader, xrefTable);
+    var body = await GetBody(stream, xrefTable, trailer);
 
-    return new PdfDocument(header, new Body(new Dictionary<ObjectIdentifier, DocumentObject>()), xrefTable, trailer);
+    return new PdfDocument(header, body, xrefTable, trailer);
   }
 
   // TODO (lena): Operate on Stream
@@ -92,7 +103,7 @@ public class PdfDocumentFactory
     var eofFound = false;
     while (!eofFound)
     {
-      var line = await ReadReverseLine(streamReader);
+      var line = await streamHelper.ReadReverseLine(streamReader);
 
       if (string.IsNullOrWhiteSpace(line))
         continue;
@@ -106,7 +117,7 @@ public class PdfDocumentFactory
 
   private async Task<long> GetXrefOffset(StreamReader streamReader)
   {
-    var xrefOffsetString = await ReadReverseLine(streamReader);
+    var xrefOffsetString = await streamHelper.ReadReverseLine(streamReader);
     var xrefOffsetParsed = long.TryParse(xrefOffsetString, out var xrefOffset);
     if (!xrefOffsetParsed)
       throw new InvalidOperationException("xref offset is not a number");
@@ -115,7 +126,7 @@ public class PdfDocumentFactory
 
   private async Task VerifyStartxrefExists(StreamReader streamReader)
   {
-    var startXref = await ReadReverseLine(streamReader);
+    var startXref = await streamHelper.ReadReverseLine(streamReader);
 
     if (startXref != "startxref")
       throw new InvalidOperationException("No 'startxref' keyword found");
@@ -136,49 +147,13 @@ public class PdfDocumentFactory
     if (bytesRead != 7)
       throw new InvalidOperationException("No 'trailer' keyword found");
 
-    var trailerDictionary = new Dictionary<string, string>();
-    ReadStreamTo("<<", stream);
-    using var memoryStream = new MemoryStream(ReadStreamTo(">>", stream));
-    ReadStreamTo("/", memoryStream); // NOTE (lena): Skip to the first entry
-    Console.WriteLine(memoryStream.Position);
-    while (memoryStream.Position < memoryStream.Length && ReadStreamTo("/", memoryStream) is { } dictEntry)
-    {
-      var dictEntryString = Encoding.UTF8.GetString(dictEntry);
-      var dictEntrySplit = dictEntryString.Split(' ', 2);
+    await streamHelper.ReadStreamTo("<<", stream);
+    using var memoryStream = new MemoryStream(await streamHelper.ReadStreamTo(">>", stream));
+    await streamHelper.ReadStreamTo("/", memoryStream); // NOTE (lena): Skip to the first entry
 
-      // NOTE (lena): Due to some fun producers of PDFs, we might get a non-standard conforming PDF.
-      //              This might mean there's a DocChecksum element with the value starting with a /.
-      //              We could handle that. Ooooor we don't. My choice here is to ignore it. :)
-      if (dictEntrySplit.Length != 2)
-        continue;
-
-      trailerDictionary.Add(dictEntryString.Split(' ')[0].Trim(), dictEntrySplit[1].Trim());
-    }
-
-    return trailerDictionary;
+    return await pdfDictionaryHelper.ReadDictionary(await streamHelper.ReadStreamTo(">>", memoryStream));
   }
 
-  private byte[] ReadStreamTo(string s, Stream stream)
-  {
-    var outputBuffer = new List<byte>();
-
-    var buffer = new byte[s.Length];
-    var bytesRead = stream.Read(buffer);
-
-    while (bytesRead == s.Length && !buffer.SequenceEqual(s.ToCharArray().Select(_ => (byte)_)))
-    {
-      outputBuffer.Add(buffer[0]);
-
-      stream.Position -= bytesRead - 1;
-
-      bytesRead = stream.Read(buffer);
-    }
-
-    return outputBuffer.ToArray();
-  }
-
-  private async Task<string> ReadReverseLine(StreamReader streamReader) =>
-    string.Concat((await streamReader.ReadLineAsync())?.Reverse() ?? throw new IOException("Unexpected end of stream"));
 
   private async Task<XRefTable> GetXrefTable(StreamReader streamReader, long xrefOffset)
   {
@@ -236,22 +211,22 @@ public class PdfDocumentFactory
     return (new ObjectIdentifier(objectNumber, generationNumber), new XRefEntry(offset, type));
   }
 
-  private async Task<Body> GetBody(StreamReader streamReader, XRefTable xRefTable)
+  private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, Trailer trailer)
   {
-    foreach (var (objectIdentifier, xRefEntry) in xRefTable)
-    {
-      if (xRefEntry.Flag == XRefEntryType.Free)
-        continue;
+    var objectDictionary = new Dictionary<ObjectIdentifier, DocumentObject>();
 
-      streamReader.BaseStream.Position = xRefEntry.Position;
-      streamReader.DiscardBufferedData();
+    var rootObjectIdentifier = ObjectIdentifier.ParseReference(trailer.TrailerDictionary["Root"]);
+    var rootObject = await GetObject(stream, xRefTable, rootObjectIdentifier);
 
-      var objectIdentifierString = await streamReader.ReadLineAsync();
+    objectDictionary.Add(rootObjectIdentifier, rootObject);
 
-      if (objectIdentifierString == null)
-        throw new IOException("Unexpected end of stream");
-    }
+    return new Body(objectDictionary);
+  }
 
-    return new Body(new Dictionary<ObjectIdentifier, DocumentObject>());
+  private async Task<DocumentObject> GetObject(Stream stream, XRefTable xRefTable, ObjectIdentifier objectIdentifier)
+  {
+    stream.Position = xRefTable[objectIdentifier].Position;
+
+    return await dictionaryObjectReader.Read(stream);
   }
 }

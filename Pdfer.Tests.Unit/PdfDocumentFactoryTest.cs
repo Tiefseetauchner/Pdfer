@@ -6,14 +6,14 @@ using NUnit.Framework;
 
 namespace Pdfer.Tests.Unit;
 
-public class PdfDocumentFactoryTests
+public class PdfDocumentFactoryTest
 {
   private PdfDocumentFactory _pdfDocumentFactory;
 
   [SetUp]
   public void Setup()
   {
-    _pdfDocumentFactory = new PdfDocumentFactory();
+    _pdfDocumentFactory = PdfDocumentFactory.Instance;
   }
 
   [Test]
@@ -22,21 +22,10 @@ public class PdfDocumentFactoryTests
     var pdfDocumentBytes = await File.ReadAllBytesAsync("../../../TestData/Test.pdf");
 
     var pdfDocument = await _pdfDocumentFactory.Parse(pdfDocumentBytes);
-    Assert.Multiple(() =>
-    {
-      Assert.That(pdfDocument.PdfVersion, Is.EqualTo(PdfVersion.Pdf17));
-      Assert.That(pdfDocument.Header.ContainsBinaryDataHeader, Is.True);
-      Assert.That(pdfDocument.Trailer.XRefByteOffset, Is.EqualTo(7530));
 
-      Assert.That(pdfDocument.Trailer.TrailerDictionary, Has.Count.EqualTo(5));
-      Assert.That(pdfDocument.Trailer.TrailerDictionary["Size"], Is.EqualTo("18"));
-      Assert.That(pdfDocument.Trailer.TrailerDictionary["Root"], Is.EqualTo("16 0 R"));
-      Assert.That(pdfDocument.Trailer.TrailerDictionary["ID"], Is.EqualTo("[ <5414416A1ACD8FC419744A93F45175A8>\n<5414416A1ACD8FC419744A93F45175A8> ]"));
-
-      Assert.That(pdfDocument.XRefTable, Has.Count.EqualTo(18));
-      Assert.That(pdfDocument.XRefTable[new ObjectIdentifier(0, 65_535)], Is.EqualTo(new XRefEntry(0, XRefEntryType.Free)));
-    });
+    AssertPdfFile(pdfDocument);
   }
+
 
   [Test]
   public async Task Parse_FromStream()
@@ -44,11 +33,23 @@ public class PdfDocumentFactoryTests
     await using var pdfDocumentBytes = File.OpenRead("../../../TestData/Test.pdf");
 
     var pdfDocument = await _pdfDocumentFactory.Parse(pdfDocumentBytes);
+
+    AssertPdfFile(pdfDocument);
+  }
+
+  private static void AssertPdfFile(PdfDocument pdfDocument)
+  {
     Assert.Multiple(() =>
     {
       Assert.That(pdfDocument.PdfVersion, Is.EqualTo(PdfVersion.Pdf17));
       Assert.That(pdfDocument.Header.ContainsBinaryDataHeader, Is.True);
       Assert.That(pdfDocument.Trailer.XRefByteOffset, Is.EqualTo(7530));
+
+      Assert.That(pdfDocument.Trailer.TrailerDictionary, Has.Count.EqualTo(4));
+      Assert.That(pdfDocument.Trailer.TrailerDictionary["Size"], Is.EqualTo("18"));
+      Assert.That(pdfDocument.Trailer.TrailerDictionary["Root"], Is.EqualTo("16 0 R"));
+      Assert.That(pdfDocument.Trailer.TrailerDictionary["ID"], Is.EqualTo("[ <5414416A1ACD8FC419744A93F45175A8>\n<5414416A1ACD8FC419744A93F45175A8> ]"));
+
       Assert.That(pdfDocument.XRefTable, Has.Count.EqualTo(18));
       Assert.That(pdfDocument.XRefTable[new ObjectIdentifier(0, 65_535)], Is.EqualTo(new XRefEntry(0, XRefEntryType.Free)));
     });
