@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -10,11 +11,11 @@ public class PdfDictionaryHelperTest
   [Test]
   public async Task Read_ShouldReturnDictionary()
   {
-    var bytes = "/TestKey TestValue"u8.ToArray();
+    using var stream = new MemoryStream("/TestKey TestValue>>Irrellevant Text"u8.ToArray());
 
-    var result = await new PdfDictionaryHelper(new StreamHelper()).ReadDictionary(bytes);
+    var result = await new PdfDictionaryHelper(new StreamHelper()).ReadDictionary(stream);
 
-    Assert.That(result, Is.EqualTo(new Dictionary<string, string>
+    Assert.That(result, Is.EquivalentTo(new Dictionary<string, string>
     {
       { "TestKey", "TestValue" }
     }));
@@ -23,25 +24,53 @@ public class PdfDictionaryHelperTest
   [Test]
   public async Task Read_WithValueWithSpaces()
   {
-    var bytes = "/TestKey Test Value with Spaces"u8.ToArray();
+    using var stream = new MemoryStream("/TestKey Test Value with Spaces>>Irrellevant Text"u8.ToArray());
 
-    var result = await new PdfDictionaryHelper(new StreamHelper()).ReadDictionary(bytes);
+    var result = await new PdfDictionaryHelper(new StreamHelper()).ReadDictionary(stream);
 
-    Assert.That(result, Is.EqualTo(new Dictionary<string, string>
+    Assert.That(result, Is.EquivalentTo(new Dictionary<string, string>
     {
       { "TestKey", "Test Value with Spaces" }
     }));
   }
 
   [Test]
-  [TestCase("/TestKey")]
-  [TestCase("/TestKey     ")]
-  [TestCase("/TestKey     \n\n")]
+  public async Task Read_NestedDictionary()
+  {
+    using var stream = new MemoryStream("/TestKey<</NestedTestKey/L2R>>>>Irrellevant Text"u8.ToArray());
+
+    var result = await new PdfDictionaryHelper(new StreamHelper()).ReadDictionary(stream);
+
+    Assert.That(result, Is.EquivalentTo(new Dictionary<string, string>
+    {
+      { "TestKey", "<</NestedTestKey/L2R>>" }
+    }));
+  }
+
+  [Test]
+  public async Task Read_MultipleEntries()
+  {
+    using var stream = new MemoryStream("/TestKey Test Value 1 with Spaces/TestKey2 Test Value 2 with Spaces/TestKey3 Test Value 3 with Spaces>>Irrellevant Text"u8.ToArray());
+
+    var result = await new PdfDictionaryHelper(new StreamHelper()).ReadDictionary(stream);
+
+    Assert.That(result, Is.EquivalentTo(new Dictionary<string, string>
+    {
+      { "TestKey", "Test Value 1 with Spaces" },
+      { "TestKey2", "Test Value 2 with Spaces" },
+      { "TestKey3", "Test Value 3 with Spaces" }
+    }));
+  }
+
+  [Test]
+  [TestCase("/TestKey>>Irrellevant Text")]
+  [TestCase("/TestKey     >>Irrellevant Text")]
+  [TestCase("/TestKey     \n\n>>Irrellevant Text")]
   public async Task Read_NoValue_ReturnsEmpty(string key)
   {
-    var bytes = Encoding.UTF8.GetBytes(key);
+    using var stream = new MemoryStream(Encoding.UTF8.GetBytes(key));
 
-    var result = await new PdfDictionaryHelper(new StreamHelper()).ReadDictionary(bytes);
+    var result = await new PdfDictionaryHelper(new StreamHelper()).ReadDictionary(stream);
 
     Assert.That(result, Is.Empty);
   }

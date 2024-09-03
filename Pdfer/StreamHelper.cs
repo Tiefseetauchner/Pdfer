@@ -28,4 +28,7 @@ public class StreamHelper : IStreamHelper
 
     return outputBuffer.ToArray();
   }
+
+  public char ReadChar(Stream stream) =>
+    (char)stream.ReadByte();
 }

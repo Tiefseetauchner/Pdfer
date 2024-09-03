@@ -1,32 +1,81 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Pdfer;
 
-public class PdfDictionaryHelper(StreamHelper streamHelper) : IPdfDictionaryHelper
+public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHelper
 {
-  public async Task<Dictionary<string, string>> ReadDictionary(byte[] bytes)
+  public Task<Dictionary<string, string>> ReadDictionary(Stream stream)
   {
-    using var stream = new MemoryStream(bytes);
-
     var dictionary = new Dictionary<string, string>();
 
-    while (stream.Position < stream.Length && await streamHelper.ReadStreamTo("/", stream) is { } dictEntry)
+    var dictionaryDepth = 1;
+    var bufferString = "";
+    var arrayKeyReading = false;
+    var arrayKey = "";
+
+    while (stream.Position < stream.Length && dictionaryDepth > 0)
     {
-      var dictEntryString = Encoding.UTF8.GetString(dictEntry);
-      var dictEntrySplit = dictEntryString.Split(' ', 2);
+      var currentChar = streamHelper.ReadChar(stream);
 
-      // NOTE (lena): Due to some fun producers of PDFs, we might get a non-standard conforming PDF.
-      //              This might mean there's a DocChecksum element with the value starting with a /.
-      //              We could handle that. Ooooor we don't. My choice here is to ignore it. :)
-      if (dictEntrySplit.Length < 2 || string.IsNullOrWhiteSpace(dictEntrySplit[1]))
-        continue;
+      switch (currentChar)
+      {
+        case '/':
+          switch (arrayKeyReading)
+          {
+            case false when bufferString.Length > 0 && dictionaryDepth == 1:
+              dictionary[arrayKey] = bufferString.Trim();
 
-      dictionary.Add(dictEntryString.Split(' ')[0].Trim(), dictEntrySplit[1].Trim());
+              bufferString = "";
+              arrayKeyReading = true;
+              break;
+
+            case false when bufferString.Length == 0:
+              arrayKeyReading = true;
+              break;
+            case false when dictionaryDepth > 1:
+            case true:
+              bufferString += currentChar;
+              break;
+          }
+
+          break;
+        case ' ':
+        case '<':
+          if (arrayKeyReading)
+          {
+            arrayKey = bufferString;
+            arrayKeyReading = false;
+            bufferString = currentChar.ToString();
+          }
+          else
+            bufferString += currentChar;
+
+          break;
+        default:
+          bufferString += currentChar;
+          break;
+      }
+
+      if (bufferString.Length >= 2)
+      {
+        switch (bufferString[^2..])
+        {
+          case "<<":
+            dictionaryDepth++;
+            break;
+          case ">>":
+            dictionaryDepth--;
+
+            if (dictionaryDepth < 1 && !arrayKeyReading && arrayKey.Length > 0 && !string.IsNullOrWhiteSpace(bufferString[..^2]))
+              dictionary[arrayKey] = bufferString[..^2].Trim();
+
+            break;
+        }
+      }
     }
 
-    return dictionary;
+    return Task.FromResult(dictionary);
   }
 }

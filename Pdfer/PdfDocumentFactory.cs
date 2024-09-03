@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -148,10 +149,8 @@ public class PdfDocumentFactory(
       throw new InvalidOperationException("No 'trailer' keyword found");
 
     await streamHelper.ReadStreamTo("<<", stream);
-    using var memoryStream = new MemoryStream(await streamHelper.ReadStreamTo(">>", stream));
-    await streamHelper.ReadStreamTo("/", memoryStream); // NOTE (lena): Skip to the first entry
 
-    return await pdfDictionaryHelper.ReadDictionary(await streamHelper.ReadStreamTo(">>", memoryStream));
+    return await pdfDictionaryHelper.ReadDictionary(stream);
   }
 
 

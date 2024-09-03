@@ -9,9 +9,8 @@ public class DictionaryObjectReader(IStreamHelper streamHelper, IPdfDictionaryHe
   {
     await streamHelper.ReadStreamTo("<<", stream);
 
-    var dictionaryContent = await streamHelper.ReadStreamTo(">>", stream);
+    var dictionary = await pdfDictionaryHelper.ReadDictionary(stream);
 
-    return new DictionaryObject(
-      await pdfDictionaryHelper.ReadDictionary(dictionaryContent));
+    return new DictionaryObject(dictionary);
   }
 }
