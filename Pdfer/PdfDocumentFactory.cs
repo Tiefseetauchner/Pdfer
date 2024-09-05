@@ -12,7 +12,8 @@ namespace Pdfer;
 public class PdfDocumentFactory(
   IStreamHelper streamHelper,
   IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
-  IPdfDictionaryHelper pdfDictionaryHelper)
+  IPdfDictionaryHelper pdfDictionaryHelper,
+  IPdfObjectReader pdfObjectReader)
 {
   public static PdfDocumentFactory Instance { get; } = new(
     new StreamHelper(),
@@ -21,7 +22,8 @@ public class PdfDocumentFactory(
       new PdfDictionaryHelper(
         new StreamHelper())),
     new PdfDictionaryHelper(
-      new StreamHelper()));
+      new StreamHelper()),
+    new PdfObjectReader());
 
   private const int HeaderLengthInBytes = 8;
   private const string HeaderBytes = "%PDF-";
@@ -214,11 +216,11 @@ public class PdfDocumentFactory(
   {
     var objectDictionary = new Dictionary<ObjectIdentifier, DocumentObject>();
 
-    var rootObjectIdentifier = ObjectIdentifier.ParseReference(trailer.TrailerDictionary["Root"]);
-    var rootObject = await GetObject(stream, xRefTable, rootObjectIdentifier);
-
-    objectDictionary.Add(rootObjectIdentifier, rootObject);
-
+    foreach (var xRefEntry in xRefTable)
+    {
+      var pdfObject = await pdfObjectReader.Read(stream, xRefEntry.Value.Position);
+    }
+    
     return new Body(objectDictionary);
   }
 
