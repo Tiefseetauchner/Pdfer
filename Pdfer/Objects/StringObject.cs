@@ -1,8 +1,7 @@
 namespace Pdfer.Objects;
 
-public class StringObject(string value) : DocumentObject
+public class StringObject(string value, byte[] rawValue) : DocumentObject(rawValue)
 {
   public string Value => value;
 
-  public override object RawValue => value;
 }

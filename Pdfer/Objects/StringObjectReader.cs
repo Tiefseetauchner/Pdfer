@@ -6,9 +6,10 @@ namespace Pdfer.Objects;
 
 public class StringObjectReader() : IDocumentObjectReader<StringObject>
 {
-  public async Task<StringObject> Read(Stream stream, long? length = null)
+  public async Task<StringObject> Read(Stream stream, IObjectRepository objectRepository)
   {
     var stringBuilder = new StringBuilder();
+    using var memoryStream = new MemoryStream();
 
     var nextByte = new byte[1];
 
@@ -33,6 +34,6 @@ public class StringObjectReader() : IDocumentObjectReader<StringObject>
         break;
     }
 
-    return new StringObject(stringBuilder.ToString());
+    return new StringObject(stringBuilder.ToString(), []);
   }
 }

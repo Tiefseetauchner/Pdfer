@@ -17,7 +17,8 @@ public class PdfDocumentParserFactory : IPdfDocumentParserFactory
       streamHelper,
       dictionaryObjectReader,
       new StringObjectReader(),
-      new StreamObjectReader());
+      new StreamObjectReader(pdfDictionaryHelper, streamHelper),
+      new NumberObjectReader(streamHelper));
 
     return new PdfDocumentParser(
       streamHelper,

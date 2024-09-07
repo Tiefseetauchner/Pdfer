@@ -4,19 +4,27 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class StreamObjectReader : IDocumentObjectReader<StreamObject>
+public class StreamObjectReader(IPdfDictionaryHelper dictionaryHelper, IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
 {
-  public async Task<StreamObject> Read(Stream stream, long? length = null)
+  public async Task<StreamObject> Read(Stream stream, IObjectRepository objectRepository)
   {
-    if (length == null)
-      throw new ArgumentException("Length must be specified for stream objects.");
+    using var rawStream = new MemoryStream();
     
-    var buffer = new byte[length.Value];
+    var (dictionary, rawBytes) = await dictionaryHelper.ReadDictionary(stream);
+    rawStream.Write(rawBytes);
+    
+    var length = long.Parse(dictionary["Length"]);
+    
+    var buffer = new byte[length];
     var bytesRead = await stream.ReadAsync(buffer);
     
     if (bytesRead != length)
       throw new IOException("Unexpected end of stream");
     
-    return new StreamObject(buffer);
+    rawStream.Write(buffer);
+    rawStream.Write(await streamHelper.ReadStreamTo("endstream", stream));
+    rawStream.Write("endstream"u8.ToArray());
+    
+    return new StreamObject(buffer, rawStream.ToArray());
   }
 }

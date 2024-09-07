@@ -7,11 +7,13 @@ namespace Pdfer;
 
 public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHelper
 {
-  public Task<Dictionary<string, string>> ReadDictionary(Stream stream)
+  public async Task<(Dictionary<string, string> dictionary, byte[] bytes)> ReadDictionary(Stream stream)
   {
+
     var dictionary = new Dictionary<string, string>();
+    using var rawBytes = new MemoryStream();
     
-    Console.WriteLine($"  Starting Dict Read at Pos {stream.Position}");
+    rawBytes.Write(await streamHelper.ReadStreamTo("<<", stream));
 
     var dictionaryDepth = 1;
     var bufferString = "";
@@ -21,6 +23,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     while (stream.Position < stream.Length && dictionaryDepth > 0)
     {
       var currentChar = streamHelper.ReadChar(stream);
+      rawBytes.WriteByte((byte)currentChar);
 
       switch (currentChar)
       {
@@ -79,7 +82,6 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
       }
     }
 
-    Console.WriteLine($"  Finished Dict Read at Pos {stream.Position}");
-    return Task.FromResult(dictionary);
+    return (dictionary, rawBytes.ToArray());
   }
 }

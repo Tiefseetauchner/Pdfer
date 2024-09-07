@@ -30,7 +30,7 @@ public class PdfDocumentParser(
     var header = await GetHeader(stream);
     var trailer = await GetTrailer(stream, streamReader);
     var xrefTable = await GetXrefTable(streamReader, trailer.XRefByteOffset);
-    var body = await GetBody(streamReader, xrefTable, trailer);
+    var body = await GetBody(stream, xrefTable, trailer);
 
     return new PdfDocument(header, body, xrefTable, trailer);
   }
@@ -138,9 +138,7 @@ public class PdfDocumentParser(
     if (bytesRead != 7)
       throw new InvalidOperationException("No 'trailer' keyword found");
 
-    await streamHelper.ReadStreamTo("<<", stream);
-
-    return await pdfDictionaryHelper.ReadDictionary(stream);
+    return (await pdfDictionaryHelper.ReadDictionary(stream)).dictionary;
   }
 
 
@@ -200,16 +198,16 @@ public class PdfDocumentParser(
     return (new ObjectIdentifier(objectNumber, generationNumber), new XRefEntry(offset, type));
   }
 
-  private async Task<Body> GetBody(StreamReader streamReader, XRefTable xRefTable, Trailer trailer)
+  private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, Trailer trailer)
   {
-    var objectRepository = new ObjectRepository();
+    var objectRepository = new ObjectRepository(pdfObjectReader);
 
     var usedXrefEntries = xRefTable
       .Where(entry => entry.Value.Flag == XRefEntryType.Used);
     
     foreach (var xRefEntry in usedXrefEntries)
     {
-      objectRepository.RetrieveObject<DocumentObject>(xRefEntry.Key);
+      await objectRepository.RetrieveObject<DocumentObject>(xRefEntry.Key, xRefEntry.Value, stream);
     }
 
     return new Body(objectRepository.Objects);

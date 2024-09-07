@@ -21,7 +21,10 @@ public class ObjectRepository(
   public async Task<T?> RetrieveObject<T>(ObjectIdentifier objectIdentifier, XRefEntry xRefEntry, Stream stream)
     where T : DocumentObject
   {
-    var pdfObject = await pdfObjectReader.Read(stream, xRefEntry.Position);
+    if (_objects.TryGetValue(objectIdentifier, out var obj))
+      return obj as T;
+    
+    var pdfObject = await pdfObjectReader.Read(stream, xRefEntry, this);
     
     _objects.Add(objectIdentifier, pdfObject);
 

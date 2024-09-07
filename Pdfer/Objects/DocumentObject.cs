@@ -1,6 +1,6 @@
 namespace Pdfer.Objects;
 
-public abstract class DocumentObject
+public abstract class DocumentObject(byte[] rawValue)
 {
-  public abstract object RawValue { get; }
+  public byte[] RawValue { get; set; } = rawValue;
 }

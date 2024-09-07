@@ -1,7 +1,6 @@
 namespace Pdfer.Objects;
 
-public class StreamObject(byte[] value) : DocumentObject
+public class StreamObject(byte[] value, byte[] rawValue) : DocumentObject(rawValue)
 {
   public byte[] Value => value;
-  public override object RawValue => value;
 }

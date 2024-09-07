@@ -1,7 +1,6 @@
 namespace Pdfer.Objects;
 
-public class IntegerObject(int value) : DocumentObject
+public class IntegerObject(long value, byte[] rawValue) : NumberObject(rawValue)
 {
-  public int Value => value;
-  public override object RawValue => value;
+  public long Value => value;
 }
