@@ -6,5 +6,5 @@ namespace Pdfer;
 
 public interface IPdfObjectReader
 {
-  Task<DocumentObject> Read(Stream stream, long xrefOffset);
+  Task<DocumentObject> Read(StreamReader streamReader, long xrefOffset);
 }

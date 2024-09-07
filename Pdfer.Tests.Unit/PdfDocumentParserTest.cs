@@ -6,14 +6,14 @@ using NUnit.Framework;
 
 namespace Pdfer.Tests.Unit;
 
-public class PdfDocumentFactoryTest
+public class PdfDocumentParserTest
 {
-  private PdfDocumentFactory _pdfDocumentFactory;
+  private PdfDocumentParser _pdfDocumentParser;
 
   [SetUp]
   public void Setup()
   {
-    _pdfDocumentFactory = PdfDocumentFactory.Instance;
+    _pdfDocumentParser = new PdfDocumentParserFactory().Create();
   }
 
   [Test]
@@ -21,7 +21,7 @@ public class PdfDocumentFactoryTest
   {
     var pdfDocumentBytes = await File.ReadAllBytesAsync("../../../TestData/Test.pdf");
 
-    var pdfDocument = await _pdfDocumentFactory.Parse(pdfDocumentBytes);
+    var pdfDocument = await _pdfDocumentParser.Parse(pdfDocumentBytes);
 
     AssertPdfFile(pdfDocument);
   }
@@ -32,7 +32,7 @@ public class PdfDocumentFactoryTest
   {
     await using var pdfDocumentBytes = File.OpenRead("../../../TestData/Test.pdf");
 
-    var pdfDocument = await _pdfDocumentFactory.Parse(pdfDocumentBytes);
+    var pdfDocument = await _pdfDocumentParser.Parse(pdfDocumentBytes);
 
     AssertPdfFile(pdfDocument);
   }
@@ -60,7 +60,7 @@ public class PdfDocumentFactoryTest
   {
     var pdfDocumentBytes = Encoding.UTF8.GetBytes("Hello World!");
 
-    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () => await _pdfDocumentFactory.Parse(pdfDocumentBytes));
+    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () => await _pdfDocumentParser.Parse(pdfDocumentBytes));
 
     Assert.That(exception.Message, Is.EqualTo("Invalid header"));
   }
@@ -70,7 +70,7 @@ public class PdfDocumentFactoryTest
   {
     byte[] pdfDocumentBytes = [];
 
-    var exception = Assert.ThrowsAsync<IOException>(async () => await _pdfDocumentFactory.Parse(pdfDocumentBytes));
+    var exception = Assert.ThrowsAsync<IOException>(async () => await _pdfDocumentParser.Parse(pdfDocumentBytes));
 
     Assert.That(exception.Message, Is.EqualTo("Unexpected end of stream"));
   }
@@ -84,7 +84,7 @@ public class PdfDocumentFactoryTest
   {
     byte[] pdfDocumentBytes = Encoding.UTF8.GetBytes($"%PDF-{version}");
 
-    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () => await _pdfDocumentFactory.Parse(pdfDocumentBytes));
+    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () => await _pdfDocumentParser.Parse(pdfDocumentBytes));
 
     Assert.That(exception.Message, Is.EqualTo($"Invalid version number '{version}'"));
   }
@@ -94,7 +94,7 @@ public class PdfDocumentFactoryTest
   {
     var pdfDocumentBytes = File.ReadAllBytes("../../../TestData/Test_NoEOF.pdf");
 
-    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () => await _pdfDocumentFactory.Parse(pdfDocumentBytes));
+    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () => await _pdfDocumentParser.Parse(pdfDocumentBytes));
 
     Assert.That(exception.Message, Is.EqualTo("No EOF found"));
   }
@@ -104,7 +104,7 @@ public class PdfDocumentFactoryTest
   {
     var pdfDocumentBytes = File.ReadAllBytes("../../../TestData/Test_NoStartxref.pdf");
 
-    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () => await _pdfDocumentFactory.Parse(pdfDocumentBytes));
+    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () => await _pdfDocumentParser.Parse(pdfDocumentBytes));
 
     Assert.That(exception.Message, Is.EqualTo("No 'startxref' keyword found"));
   }
@@ -114,7 +114,7 @@ public class PdfDocumentFactoryTest
   {
     var pdfDocumentBytes = File.ReadAllBytes("../../../TestData/Test_CorruptStartxref.pdf");
 
-    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () => await _pdfDocumentFactory.Parse(pdfDocumentBytes));
+    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () => await _pdfDocumentParser.Parse(pdfDocumentBytes));
 
     Assert.That(exception.Message, Is.EqualTo("xref offset is not a number"));
   }

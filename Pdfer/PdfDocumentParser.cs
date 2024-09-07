@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,22 +8,12 @@ using Pdfer.Objects;
 
 namespace Pdfer;
 
-public class PdfDocumentFactory(
+public class PdfDocumentParser(
   IStreamHelper streamHelper,
   IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
   IPdfDictionaryHelper pdfDictionaryHelper,
   IPdfObjectReader pdfObjectReader)
 {
-  public static PdfDocumentFactory Instance { get; } = new(
-    new StreamHelper(),
-    new DictionaryObjectReader(
-      new StreamHelper(),
-      new PdfDictionaryHelper(
-        new StreamHelper())),
-    new PdfDictionaryHelper(
-      new StreamHelper()),
-    new PdfObjectReader());
-
   private const int HeaderLengthInBytes = 8;
   private const string HeaderBytes = "%PDF-";
 
@@ -42,7 +31,7 @@ public class PdfDocumentFactory(
     var header = await GetHeader(stream);
     var trailer = await GetTrailer(stream, streamReader);
     var xrefTable = await GetXrefTable(streamReader, trailer.XRefByteOffset);
-    var body = await GetBody(stream, xrefTable, trailer);
+    var body = await GetBody(streamReader, xrefTable, trailer);
 
     return new PdfDocument(header, body, xrefTable, trailer);
   }
@@ -212,15 +201,15 @@ public class PdfDocumentFactory(
     return (new ObjectIdentifier(objectNumber, generationNumber), new XRefEntry(offset, type));
   }
 
-  private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, Trailer trailer)
+  private async Task<Body> GetBody(StreamReader streamReader, XRefTable xRefTable, Trailer trailer)
   {
     var objectDictionary = new Dictionary<ObjectIdentifier, DocumentObject>();
 
     foreach (var xRefEntry in xRefTable)
     {
-      var pdfObject = await pdfObjectReader.Read(stream, xRefEntry.Value.Position);
+      var pdfObject = await pdfObjectReader.Read(streamReader, xRefEntry.Value.Position);
     }
-    
+
     return new Body(objectDictionary);
   }
 

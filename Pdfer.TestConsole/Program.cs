@@ -11,7 +11,7 @@ class Program
   {
     Console.WriteLine("Hello Pdfer!");
 
-    var pdfDocument = await PdfDocumentFactory.Instance.Parse(File.OpenRead(args[0]));
+    var pdfDocument = await new PdfDocumentParserFactory().Create().Parse(File.OpenRead(args[0]));
 
     Console.WriteLine($"PdfVersion:       {pdfDocument.PdfVersion}");
     pdfDocument.Trailer.TrailerDictionary.ToList().ForEach(entry => Console.WriteLine($"trailer entry: {entry.Key} {entry.Value}"));
