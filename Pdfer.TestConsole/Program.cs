@@ -18,10 +18,10 @@ class Program
     Console.WriteLine($"startxref offset: {pdfDocument.Trailer.XRefByteOffset}");
     pdfDocument.XRefTable.ToList().ForEach(entry => Console.WriteLine($"xref entry: {entry.Key} {entry.Value}"));
 
-    pdfDocument.Body.Objects.ToList().ForEach(obj => Console.WriteLine($"body object: {obj}"));
+    pdfDocument.Body.Objects.ToList().ForEach(obj => Console.WriteLine($"body object: {obj.Key.ObjectNumber}, {obj.Value}"));
 
     Console.Write("Press any key to exit...");
     Console.ReadKey();
     Console.WriteLine();
   }
-}
+} 

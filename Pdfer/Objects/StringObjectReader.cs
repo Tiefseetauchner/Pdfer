@@ -6,7 +6,7 @@ namespace Pdfer.Objects;
 
 public class StringObjectReader() : IDocumentObjectReader<StringObject>
 {
-  public async Task<StringObject> Read(Stream stream)
+  public async Task<StringObject> Read(Stream stream, long? length = null)
   {
     var stringBuilder = new StringBuilder();
 
@@ -20,9 +20,9 @@ public class StringObjectReader() : IDocumentObjectReader<StringObject>
 
     var escaped = false;
 
-    while (await stream.ReadAsync(nextByte) != -1)
+    while (await stream.ReadAsync(nextByte) != 0)
     {
-      char nextCharacter = (char)nextByte[0];
+      var nextCharacter = (char)nextByte[0];
       stringBuilder.Append(nextCharacter);
 
       if (escaped)

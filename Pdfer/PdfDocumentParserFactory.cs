@@ -13,7 +13,8 @@ public class PdfDocumentParserFactory : IPdfDocumentParserFactory
       pdfDictionaryHelper);
     var pdfObjectReader = new PdfObjectReader(
       dictionaryObjectReader,
-      new StringObjectReader());
+      new StringObjectReader(),
+      new StreamObjectReader());
 
     return new PdfDocumentParser(
       streamHelper,

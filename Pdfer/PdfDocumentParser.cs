@@ -205,9 +205,13 @@ public class PdfDocumentParser(
   {
     var objectDictionary = new Dictionary<ObjectIdentifier, DocumentObject>();
 
-    foreach (var xRefEntry in xRefTable)
+    var usedXrefEntries = xRefTable
+      .Where(entry => entry.Value.Flag == XRefEntryType.Used);
+    
+    foreach (var xRefEntry in usedXrefEntries)
     {
       var pdfObject = await pdfObjectReader.Read(streamReader, xRefEntry.Value.Position);
+      objectDictionary.Add(xRefEntry.Key, pdfObject);
     }
 
     return new Body(objectDictionary);
