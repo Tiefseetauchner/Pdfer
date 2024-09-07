@@ -1,46 +1,61 @@
 using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Pdfer.Objects;
 
 namespace Pdfer;
 
 public class PdfObjectReader(
+  IStreamHelper streamHelper,
+  IObjectRepository objectRepository,
   IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
   IDocumentObjectReader<StringObject> stringObjectReader,
   IDocumentObjectReader<StreamObject> streamObjectReader) : IPdfObjectReader
 {
-  private static readonly char[] DictionaryStart = ['<', '<'];
-
   // TODO (lena): Deal with NameObjects
   // TODO (lena): Deal with BooleanObjects
   // TODO (lena): Deal with NullObjects
-  public async Task<DocumentObject> Read(StreamReader streamReader, long xrefOffset)
+  // TODO (lena): change to stream
+  public async Task<DocumentObject> Read(Stream stream, long xrefOffset)
   {
-    streamReader.DiscardBufferedData();
-    streamReader.BaseStream.Seek(xrefOffset, SeekOrigin.Begin);
-    var objectIdentifier = await streamReader.ReadLineAsync();
+    stream.Position = xrefOffset;
 
-    var objectStartBuffer = new char[2];
-    var objectStart = streamReader.Read(objectStartBuffer);
-    streamReader.BaseStream.Position -= objectStart;
+    await streamHelper.ReadStreamTo("\n", stream);
+
+    var objectStartBuffer = new byte[2];
+    var objectStart = await stream.ReadAsync(objectStartBuffer);
+    stream.Position -= objectStart;
 
     if (objectStart != 2)
       throw new IOException("Unexpected end of stream");
-    
+
     if (objectStartBuffer[0] == '<' &&
         objectStartBuffer[0] != '<' ||
         objectStartBuffer[0] == '(')
-      return await stringObjectReader.Read(streamReader.BaseStream);
+      return await stringObjectReader.Read(stream);
 
     if (objectStartBuffer[0] == '<' &&
         objectStartBuffer[0] == '<')
     {
-      var dictionary = await dictionaryObjectReader.Read(streamReader.BaseStream);
-      streamReader.DiscardBufferedData();
-      var nextLine = streamReader.ReadLine();
+      var dictionary = await dictionaryObjectReader.Read(stream);
+
+      var nextLine = Encoding.UTF8.GetString(await streamHelper.ReadStreamTo("\n", stream)).Trim();
+
       if (nextLine == "stream")
-        return await streamObjectReader.Read(streamReader.BaseStream, long.Parse(dictionary.Value["Size"])); 
+      {
+        if (!dictionary.Value.TryGetValue("Length", out string? value))
+          throw new ArgumentException("Length must be specified for stream objects.");
+
+        if (long.TryParse(value, out var length))
+          return await streamObjectReader.Read(stream, length);
+        else
+        {
+          var lengthObject = objectRepository.RetrieveObject<IntegerObject>(ObjectIdentifier.ParseReference(value));
+          
+          
+        }
+      }
 
       return dictionary;
     }

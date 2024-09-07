@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -9,6 +10,8 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
   public Task<Dictionary<string, string>> ReadDictionary(Stream stream)
   {
     var dictionary = new Dictionary<string, string>();
+    
+    Console.WriteLine($"  Starting Dict Read at Pos {stream.Position}");
 
     var dictionaryDepth = 1;
     var bufferString = "";
@@ -57,7 +60,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
           bufferString += currentChar;
           break;
       }
-
+      
       if (bufferString.Length >= 2)
       {
         switch (bufferString[^2..])
@@ -76,6 +79,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
       }
     }
 
+    Console.WriteLine($"  Finished Dict Read at Pos {stream.Position}");
     return Task.FromResult(dictionary);
   }
 }

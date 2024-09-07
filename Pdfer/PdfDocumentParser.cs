@@ -10,7 +10,6 @@ namespace Pdfer;
 
 public class PdfDocumentParser(
   IStreamHelper streamHelper,
-  IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
   IPdfDictionaryHelper pdfDictionaryHelper,
   IPdfObjectReader pdfObjectReader)
 {
@@ -203,24 +202,16 @@ public class PdfDocumentParser(
 
   private async Task<Body> GetBody(StreamReader streamReader, XRefTable xRefTable, Trailer trailer)
   {
-    var objectDictionary = new Dictionary<ObjectIdentifier, DocumentObject>();
+    var objectRepository = new ObjectRepository();
 
     var usedXrefEntries = xRefTable
       .Where(entry => entry.Value.Flag == XRefEntryType.Used);
     
     foreach (var xRefEntry in usedXrefEntries)
     {
-      var pdfObject = await pdfObjectReader.Read(streamReader, xRefEntry.Value.Position);
-      objectDictionary.Add(xRefEntry.Key, pdfObject);
+      objectRepository.RetrieveObject<DocumentObject>(xRefEntry.Key);
     }
 
-    return new Body(objectDictionary);
-  }
-
-  private async Task<DocumentObject> GetObject(Stream stream, XRefTable xRefTable, ObjectIdentifier objectIdentifier)
-  {
-    stream.Position = xRefTable[objectIdentifier].Position;
-
-    return await dictionaryObjectReader.Read(stream);
+    return new Body(objectRepository.Objects);
   }
 }

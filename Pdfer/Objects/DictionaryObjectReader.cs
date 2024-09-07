@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -8,7 +9,7 @@ public class DictionaryObjectReader(IStreamHelper streamHelper, IPdfDictionaryHe
   public async Task<DictionaryObject> Read(Stream stream, long? length = null)
   {
     await streamHelper.ReadStreamTo("<<", stream);
-
+    
     var dictionary = await pdfDictionaryHelper.ReadDictionary(stream);
     
     // NOTE (lena): We want to skip to the next line here
