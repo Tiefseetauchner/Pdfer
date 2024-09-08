@@ -4,10 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pdfer.Objects;
 
 namespace Pdfer;
 
-public class PdfDocumentWriter(IPdfDictionaryHelper pdfDictionaryHelper) : IPdfDocumentWriter
+public class PdfDocumentWriter(
+  IPdfDictionaryHelper pdfDictionaryHelper,
+  IDocumentObjectSerializer<DictionaryObject> dictionaryObjectSerializer,
+  IDocumentObjectSerializer<NumberObject> numberObjectSerializer,
+  IDocumentObjectSerializer<StreamObject> streamObjectSerializer,
+  IDocumentObjectSerializer<StringObject> stringObjectSerializer) : IPdfDocumentWriter
 {
   public async Task Write(Stream stream, PdfDocument pdfDocument)
   {
@@ -15,7 +21,7 @@ public class PdfDocumentWriter(IPdfDictionaryHelper pdfDictionaryHelper) : IPdfD
       throw new ArgumentException("Stream is not writable", nameof(stream));
 
     WriteHeader(stream, pdfDocument.Header);
-    var xRefTable = WriteBody(stream, pdfDocument.Body);
+    var xRefTable = await WriteBody(stream, pdfDocument.Body);
     var xRefTableOffset = WriteXrefTable(stream, xRefTable);
     await WriteTrailer(stream, pdfDocument.Trailer, xRefTableOffset);
   }
@@ -45,8 +51,7 @@ public class PdfDocumentWriter(IPdfDictionaryHelper pdfDictionaryHelper) : IPdfD
     stream.Write("\n"u8);
   }
 
-  // TODO (lena): Make an object writer for each object type to write them from the value instead of the raw data
-  private XRefTable WriteBody(Stream stream, Body pdfDocumentBody)
+  private async Task<XRefTable> WriteBody(Stream stream, Body pdfDocumentBody)
   {
     var xRefTable = new XRefTable
     {
@@ -57,11 +62,25 @@ public class PdfDocumentWriter(IPdfDictionaryHelper pdfDictionaryHelper) : IPdfD
     {
       var position = stream.Position;
       xRefTable.Add(key, new XRefEntry(position, XRefEntryType.Used));
-      stream.Write(value.RawValue);
-      stream.Write("\n\n"u8);
+      await WriteObject(stream, value);
+      await stream.WriteAsync("\n\n"u8.ToArray());
     }
 
     return xRefTable;
+  }
+
+  private async Task WriteObject(Stream stream, DocumentObject value)
+  {
+    var bytes = value switch
+    {
+      DictionaryObject dictionaryObject => await dictionaryObjectSerializer.Serialize(dictionaryObject),
+      NumberObject numberObject => await numberObjectSerializer.Serialize(numberObject),
+      StreamObject streamObject => await streamObjectSerializer.Serialize(streamObject),
+      StringObject stringObject => await stringObjectSerializer.Serialize(stringObject),
+      _ => throw new InvalidOperationException($"Unknown object type '{value.GetType()}'")
+    };
+
+    await stream.WriteAsync(bytes);
   }
 
   private long WriteXrefTable(Stream stream, XRefTable xRefTable)
@@ -113,7 +132,7 @@ public class PdfDocumentWriter(IPdfDictionaryHelper pdfDictionaryHelper) : IPdfD
   {
     await stream.WriteAsync("trailer\n"u8.ToArray());
 
-    pdfDictionaryHelper.WriteDictionary(stream, pdfDocumentTrailer.TrailerDictionary);
+    await pdfDictionaryHelper.WriteDictionary(stream, pdfDocumentTrailer.TrailerDictionary);
 
     await stream.WriteAsync("\n"u8.ToArray());
     await stream.WriteAsync("startxref\n"u8.ToArray());

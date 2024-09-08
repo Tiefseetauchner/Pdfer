@@ -6,6 +6,7 @@ namespace Pdfer.Objects;
 
 public class PdfObjectReader(
   IPdfDictionaryHelper pdfDictionaryHelper,
+  IStreamHelper streamHelper,
   IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
   IDocumentObjectReader<StringObject> stringObjectReader,
   IDocumentObjectReader<StreamObject> streamObjectReader,
@@ -17,6 +18,8 @@ public class PdfObjectReader(
   public async Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, ObjectIdentifier objectIdentifier, IObjectRepository objectRepository)
   {
     stream.Position = xRefEntry.Position;
+
+    await streamHelper.ReadStreamTo("\n", stream);
 
     var objectStartBuffer = new byte[2];
     var objectStart = await stream.ReadAsync(objectStartBuffer);
