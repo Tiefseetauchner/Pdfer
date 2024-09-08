@@ -5,5 +5,5 @@ namespace Pdfer.Objects;
 
 public interface IDocumentObjectReader<T> where T : DocumentObject
 {
-  Task<T> Read(Stream stream, IObjectRepository objectRepository, byte[] objectIdentifier);
+  Task<T> Read(Stream stream, IObjectRepository objectRepository, ObjectIdentifier objectIdentifier);
 }

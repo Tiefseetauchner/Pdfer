@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Pdfer;
 
-public class PdfDocumentWriter : IPdfDocumentWriter
+public class PdfDocumentWriter(IPdfDictionaryHelper pdfDictionaryHelper) : IPdfDocumentWriter
 {
-  public void Write(Stream stream, PdfDocument pdfDocument)
+  public async Task Write(Stream stream, PdfDocument pdfDocument)
   {
     if (!stream.CanWrite)
       throw new ArgumentException("Stream is not writable", nameof(stream));
@@ -16,7 +17,7 @@ public class PdfDocumentWriter : IPdfDocumentWriter
     WriteHeader(stream, pdfDocument.Header);
     var xRefTable = WriteBody(stream, pdfDocument.Body);
     var xRefTableOffset = WriteXrefTable(stream, xRefTable);
-    WriteTrailer(stream, pdfDocument.Trailer, xRefTableOffset);
+    await WriteTrailer(stream, pdfDocument.Trailer, xRefTableOffset);
   }
 
   private void WriteHeader(Stream stream, Header pdfDocumentHeader)
@@ -108,29 +109,21 @@ public class PdfDocumentWriter : IPdfDocumentWriter
   }
 
   // TODO (lena): Change Size in Trailer
-  private void WriteTrailer(Stream stream, Trailer pdfDocumentTrailer, long xRefTableOffset)
+  private async Task WriteTrailer(Stream stream, Trailer pdfDocumentTrailer, long xRefTableOffset)
   {
-    stream.Write("trailer\n"u8);
-    stream.Write("<<"u8);
-    foreach (var (key, value) in pdfDocumentTrailer.TrailerDictionary)
-    {
-      stream.Write("\ngit"u8);
-      stream.Write(Encoding.ASCII.GetBytes(key));
-      stream.Write(" "u8);
-      stream.Write(Encoding.ASCII.GetBytes(value));
-    }
+    await stream.WriteAsync("trailer\n"u8.ToArray());
 
-    stream.Write(">>"u8);
+    pdfDictionaryHelper.WriteDictionary(stream, pdfDocumentTrailer.TrailerDictionary);
 
-    stream.Write("\n"u8);
-    stream.Write("startxref\n"u8);
-    stream.Write(Encoding.ASCII.GetBytes(xRefTableOffset.ToString()));
-    stream.Write("\n"u8);
-    stream.Write("%%EOF\n"u8);
+    await stream.WriteAsync("\n"u8.ToArray());
+    await stream.WriteAsync("startxref\n"u8.ToArray());
+    await stream.WriteAsync(Encoding.ASCII.GetBytes(xRefTableOffset.ToString()));
+    await stream.WriteAsync("\n"u8.ToArray());
+    await stream.WriteAsync("%%EOF\n"u8.ToArray());
   }
 }
 
 public interface IPdfDocumentWriter
 {
-  void Write(Stream stream, PdfDocument pdfDocument);
+  Task Write(Stream stream, PdfDocument pdfDocument);
 }

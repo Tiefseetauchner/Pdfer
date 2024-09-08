@@ -1,12 +1,10 @@
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
 public class PdfObjectReader(
-  IStreamHelper streamHelper,
   IPdfDictionaryHelper pdfDictionaryHelper,
   IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
   IDocumentObjectReader<StringObject> stringObjectReader,
@@ -16,11 +14,9 @@ public class PdfObjectReader(
   // TODO (lena): Deal with NameObjects
   // TODO (lena): Deal with BooleanObjects
   // TODO (lena): Deal with NullObjects
-  public async Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, IObjectRepository objectRepository)
+  public async Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, ObjectIdentifier objectIdentifier, IObjectRepository objectRepository)
   {
     stream.Position = xRefEntry.Position;
-
-    var objectIdentifier = (await streamHelper.ReadStreamTo("\n", stream)).Concat("\n"u8.ToArray()).ToArray();
 
     var objectStartBuffer = new byte[2];
     var objectStart = await stream.ReadAsync(objectStartBuffer);

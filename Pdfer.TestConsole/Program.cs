@@ -22,6 +22,6 @@ class Program
 
     await using var outputStream = File.OpenWrite(args[1]);
     outputStream.SetLength(0);
-    new PdfDocumentWriter().Write(outputStream, pdfDocument);
+    await new PdfDocumentWriterFactory().Create().Write(outputStream, pdfDocument);
   }
 }

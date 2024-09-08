@@ -5,11 +5,11 @@ namespace Pdfer.Objects;
 
 public class DictionaryObjectReader(IStreamHelper streamHelper, IPdfDictionaryHelper pdfDictionaryHelper) : IDocumentObjectReader<DictionaryObject>
 {
-  public async Task<DictionaryObject> Read(Stream stream, IObjectRepository objectRepository, byte[] objectIdentifier)
+  public async Task<DictionaryObject> Read(Stream stream, IObjectRepository objectRepository, ObjectIdentifier objectIdentifier)
   {
     using var rawData = new MemoryStream();
 
-    rawData.Write(objectIdentifier);
+    rawData.Write(objectIdentifier.GetHeaderBytes());
 
     var (dictionary, dictionaryBytes) = await pdfDictionaryHelper.ReadDictionary(stream);
     rawData.Write(dictionaryBytes);
@@ -18,6 +18,6 @@ public class DictionaryObjectReader(IStreamHelper streamHelper, IPdfDictionaryHe
 
     rawData.Write("endobj"u8.ToArray());
 
-    return new DictionaryObject(dictionary, rawData.ToArray());
+    return new DictionaryObject(dictionary, rawData.ToArray(), objectIdentifier);
   }
 }

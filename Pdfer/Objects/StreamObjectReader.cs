@@ -6,10 +6,10 @@ namespace Pdfer.Objects;
 
 public class StreamObjectReader(IPdfDictionaryHelper dictionaryHelper, IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
 {
-  public async Task<StreamObject> Read(Stream stream, IObjectRepository objectRepository, byte[] objectIdentifier)
+  public async Task<StreamObject> Read(Stream stream, IObjectRepository objectRepository, ObjectIdentifier objectIdentifier)
   {
     using var rawStream = new MemoryStream();
-    rawStream.Write(objectIdentifier);
+    rawStream.Write(objectIdentifier.GetHeaderBytes());
 
     var (dictionary, rawBytes) = await dictionaryHelper.ReadDictionary(stream);
     rawStream.Write(rawBytes);
@@ -32,6 +32,6 @@ public class StreamObjectReader(IPdfDictionaryHelper dictionaryHelper, IStreamHe
     rawStream.Write("endstream\n"u8.ToArray());
     rawStream.Write("endobj"u8.ToArray());
 
-    return new StreamObject(buffer, rawStream.ToArray());
+    return new StreamObject(buffer, rawStream.ToArray(), objectIdentifier);
   }
 }

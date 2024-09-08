@@ -76,4 +76,25 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
 
     return (dictionary, rawBytes.ToArray());
   }
+
+  public async Task<byte[]> GetDictionaryBytes(Dictionary<string, string> dictionary)
+  {
+    using var memoryStream = new MemoryStream();
+    await WriteDictionary(memoryStream, dictionary);
+    return memoryStream.ToArray();
+  }
+
+  public async Task WriteDictionary(Stream stream, Dictionary<string, string> dictionary)
+  {
+    await stream.WriteAsync("<<"u8.ToArray());
+    foreach (var (key, value) in dictionary)
+    {
+      await stream.WriteAsync("\n"u8.ToArray());
+      await stream.WriteAsync(Encoding.ASCII.GetBytes(key));
+      await stream.WriteAsync(" "u8.ToArray());
+      await stream.WriteAsync(Encoding.ASCII.GetBytes(value));
+    }
+
+    await stream.WriteAsync(">>"u8.ToArray());
+  }
 }

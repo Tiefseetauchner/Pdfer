@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Pdfer;
 
 public record ObjectIdentifier(
@@ -9,4 +11,10 @@ public record ObjectIdentifier(
     var objectIdentifierParts = objectIdentifier.Split(' ');
     return new ObjectIdentifier(int.Parse(objectIdentifierParts[0]), int.Parse(objectIdentifierParts[1]));
   }
+
+  public byte[] GetHeaderBytes() =>
+    Encoding.ASCII.GetBytes(GetHeaderString());
+
+  public string GetHeaderString() =>
+    $"{ObjectNumber} {Generation} obj\n";
 }

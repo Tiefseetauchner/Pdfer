@@ -6,11 +6,11 @@ namespace Pdfer.Objects;
 
 public class StringObjectReader() : IDocumentObjectReader<StringObject>
 {
-  public async Task<StringObject> Read(Stream stream, IObjectRepository objectRepository, byte[] objectIdentifier)
+  public async Task<StringObject> Read(Stream stream, IObjectRepository objectRepository, ObjectIdentifier objectIdentifier)
   {
     var stringBuilder = new StringBuilder();
     using var memoryStream = new MemoryStream();
-    memoryStream.Write(objectIdentifier);
+    memoryStream.Write(objectIdentifier.GetHeaderBytes());
 
     var nextByte = new byte[1];
 
@@ -38,6 +38,6 @@ public class StringObjectReader() : IDocumentObjectReader<StringObject>
     memoryStream.Write(Encoding.UTF8.GetBytes(stringBuilder.ToString()));
     memoryStream.Write("endobj"u8);
 
-    return new StringObject(stringBuilder.ToString(), memoryStream.ToArray());
+    return new StringObject(stringBuilder.ToString(), memoryStream.ToArray(), objectIdentifier);
   }
 }
