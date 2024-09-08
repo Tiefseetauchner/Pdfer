@@ -28,7 +28,8 @@ public class StreamObjectReader(IPdfDictionaryHelper dictionaryHelper, IStreamHe
 
     rawStream.Write(buffer);
     rawStream.Write(await streamHelper.ReadStreamTo("endstream", stream));
-    rawStream.Write("endstream"u8.ToArray());
+    rawStream.Write("endstream\n"u8.ToArray());
+    rawStream.Write("endobj"u8.ToArray());
 
     return new StreamObject(buffer, rawStream.ToArray());
   }

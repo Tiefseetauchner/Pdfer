@@ -21,6 +21,7 @@ class Program
     pdfDocument.Body.Objects.ToList().ForEach(obj => Console.WriteLine($"body object: {obj.Key.ObjectNumber}, {obj.Value}"));
 
     await using var outputStream = File.OpenWrite(args[1]);
+    outputStream.SetLength(0);
     new PdfDocumentWriter().Write(outputStream, pdfDocument);
   }
 }

@@ -19,25 +19,48 @@ public class PdfDocumentWriter : IPdfDocumentWriter
     WriteTrailer(stream, pdfDocument.Trailer, xRefTableOffset);
   }
 
-  private void WriteTrailer(Stream stream, Trailer pdfDocumentTrailer, long xRefTableOffset)
+  private void WriteHeader(Stream stream, Header pdfDocumentHeader)
   {
-    stream.Write("trailer\n"u8);
-    stream.Write("<<"u8);
-    foreach (var (key, value) in pdfDocumentTrailer.TrailerDictionary)
+    stream.Write("%PDF-"u8);
+
+    stream.Write(pdfDocumentHeader.Version switch
     {
-      stream.Write("\n/"u8);
-      stream.Write(Encoding.ASCII.GetBytes(key));
-      stream.Write(" "u8);
-      stream.Write(Encoding.ASCII.GetBytes(value));
+      PdfVersion.Pdf10 => "1.0"u8,
+      PdfVersion.Pdf11 => "1.1"u8,
+      PdfVersion.Pdf12 => "1.2"u8,
+      PdfVersion.Pdf13 => "1.3"u8,
+      PdfVersion.Pdf14 => "1.4"u8,
+      PdfVersion.Pdf15 => "1.5"u8,
+      PdfVersion.Pdf16 => "1.6"u8,
+      PdfVersion.Pdf17 => "1.7"u8,
+      _ => throw new InvalidOperationException($"Invalid version number '{pdfDocumentHeader.Version}'")
+    });
+
+    stream.Write("\n"u8);
+
+    if (pdfDocumentHeader.ContainsBinaryDataHeader)
+      stream.Write("%äöüß"u8);
+
+    stream.Write("\n"u8);
+  }
+
+  // TODO (lena): Make an object writer for each object type to write them from the value instead of the raw data
+  private XRefTable WriteBody(Stream stream, Body pdfDocumentBody)
+  {
+    var xRefTable = new XRefTable
+    {
+      { new ObjectIdentifier(0, 65535), new XRefEntry(0, XRefEntryType.Free) }
+    };
+
+    foreach (var (key, value) in pdfDocumentBody.Objects)
+    {
+      var position = stream.Position;
+      xRefTable.Add(key, new XRefEntry(position, XRefEntryType.Used));
+      stream.Write(value.RawValue);
+      stream.Write("\n\n"u8);
     }
 
-    stream.Write(">>"u8);
-
-    stream.Write("\n"u8);
-    stream.Write("startxref\n"u8);
-    stream.Write(Encoding.ASCII.GetBytes(xRefTableOffset.ToString()));
-    stream.Write("\n"u8);
-    stream.Write("%%EOF\n"u8);
+    return xRefTable;
   }
 
   private long WriteXrefTable(Stream stream, XRefTable xRefTable)
@@ -84,47 +107,26 @@ public class PdfDocumentWriter : IPdfDocumentWriter
     stream.Write(Encoding.ASCII.GetBytes(xRefTableEntries));
   }
 
-  private void WriteHeader(Stream stream, Header pdfDocumentHeader)
+  // TODO (lena): Change Size in Trailer
+  private void WriteTrailer(Stream stream, Trailer pdfDocumentTrailer, long xRefTableOffset)
   {
-    stream.Write("%PDF-"u8);
-
-    stream.Write(pdfDocumentHeader.Version switch
+    stream.Write("trailer\n"u8);
+    stream.Write("<<"u8);
+    foreach (var (key, value) in pdfDocumentTrailer.TrailerDictionary)
     {
-      PdfVersion.Pdf10 => "1.0"u8,
-      PdfVersion.Pdf11 => "1.1"u8,
-      PdfVersion.Pdf12 => "1.2"u8,
-      PdfVersion.Pdf13 => "1.3"u8,
-      PdfVersion.Pdf14 => "1.4"u8,
-      PdfVersion.Pdf15 => "1.5"u8,
-      PdfVersion.Pdf16 => "1.6"u8,
-      PdfVersion.Pdf17 => "1.7"u8,
-      _ => throw new InvalidOperationException($"Invalid version number '{pdfDocumentHeader.Version}'")
-    });
-
-    stream.Write("\n"u8);
-
-    if (pdfDocumentHeader.ContainsBinaryDataHeader)
-      stream.Write("%äöüß"u8);
-
-    stream.Write("\n"u8);
-  }
-
-  private XRefTable WriteBody(Stream stream, Body pdfDocumentBody)
-  {
-    var xRefTable = new XRefTable
-    {
-      { new ObjectIdentifier(0, 65535), new XRefEntry(0, XRefEntryType.Free) }
-    };
-
-    foreach (var (key, value) in pdfDocumentBody.Objects)
-    {
-      var position = stream.Position;
-      xRefTable.Add(key, new XRefEntry(position, XRefEntryType.Used));
-      stream.Write(value.RawValue);
-      stream.Write("\n\n"u8);
+      stream.Write("\n/"u8);
+      stream.Write(Encoding.ASCII.GetBytes(key));
+      stream.Write(" "u8);
+      stream.Write(Encoding.ASCII.GetBytes(value));
     }
 
-    return xRefTable;
+    stream.Write(">>"u8);
+
+    stream.Write("\n"u8);
+    stream.Write("startxref\n"u8);
+    stream.Write(Encoding.ASCII.GetBytes(xRefTableOffset.ToString()));
+    stream.Write("\n"u8);
+    stream.Write("%%EOF\n"u8);
   }
 }
 
