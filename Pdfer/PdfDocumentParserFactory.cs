@@ -8,14 +8,13 @@ public class PdfDocumentParserFactory : IPdfDocumentParserFactory
   {
     var streamHelper = new StreamHelper();
     var pdfDictionaryHelper = new PdfDictionaryHelper(streamHelper);
-    
-    var dictionaryObjectReader = new DictionaryObjectReader(
-      streamHelper,
-      pdfDictionaryHelper);
-    
+
     var pdfObjectReader = new PdfObjectReader(
       streamHelper,
-      dictionaryObjectReader,
+      pdfDictionaryHelper,
+      new DictionaryObjectReader(
+        streamHelper,
+        pdfDictionaryHelper),
       new StringObjectReader(),
       new StreamObjectReader(pdfDictionaryHelper, streamHelper),
       new NumberObjectReader(streamHelper));

@@ -200,14 +200,14 @@ public class PdfDocumentParser(
 
   private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, Trailer trailer)
   {
-    var objectRepository = new ObjectRepository(pdfObjectReader);
+    var objectRepository = new ObjectRepository(pdfObjectReader, xRefTable);
 
     var usedXrefEntries = xRefTable
       .Where(entry => entry.Value.Flag == XRefEntryType.Used);
-    
+
     foreach (var xRefEntry in usedXrefEntries)
     {
-      await objectRepository.RetrieveObject<DocumentObject>(xRefEntry.Key, xRefEntry.Value, stream);
+      await objectRepository.RetrieveObject<DocumentObject>(xRefEntry.Key, stream);
     }
 
     return new Body(objectRepository.Objects);

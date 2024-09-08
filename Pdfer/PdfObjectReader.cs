@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,15 +7,15 @@ namespace Pdfer;
 
 public class PdfObjectReader(
   IStreamHelper streamHelper,
+  IPdfDictionaryHelper pdfDictionaryHelper,
   IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
   IDocumentObjectReader<StringObject> stringObjectReader,
-  IDocumentObjectReader<StreamObject> streamObjectReader, 
+  IDocumentObjectReader<StreamObject> streamObjectReader,
   IDocumentObjectReader<NumberObject> numberObjectReader) : IPdfObjectReader
 {
   // TODO (lena): Deal with NameObjects
   // TODO (lena): Deal with BooleanObjects
   // TODO (lena): Deal with NullObjects
-  // TODO (lena): change to stream
   public async Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, IObjectRepository objectRepository)
   {
     stream.Position = xRefEntry.Position;
@@ -38,22 +37,19 @@ public class PdfObjectReader(
     if (objectStartBuffer[0] == '<' &&
         objectStartBuffer[0] == '<')
     {
-      var dictionary = await dictionaryObjectReader.Read(stream, objectRepository);
-
-      await streamHelper.ReadStreamTo("\n", stream);
-      stream.Position += 1;
-      var nextLine = Encoding.UTF8.GetString(await streamHelper.ReadStreamTo("\n", stream)).Trim();
-
-      if (nextLine != "stream") 
-        return dictionary;
-      // NOTE (lena): We need to restart the stream so we can get the whole raw Data
-      //              Here we're currently then reading the dictionary twice. This is not ideal, but it works for now.
+      // IMPROVE (lena): This is not a good way to check if it is a stream. We're reading the whole dictionary twice.
+      await pdfDictionaryHelper.ReadDictionary(stream);
+      var buffer = new byte[7];
+      _ = await stream.ReadAsync(buffer);
+      var contentAfterDictionary = Encoding.ASCII.GetString(buffer);
       stream.Position = xRefEntry.Position;
-        
-      return await streamObjectReader.Read(stream, objectRepository);
 
+      if (contentAfterDictionary.Trim().StartsWith("stream"))
+        return await streamObjectReader.Read(stream, objectRepository);
+
+      return await dictionaryObjectReader.Read(stream, objectRepository);
     }
-    
+
     if (char.IsNumber((char)objectStartBuffer[0]))
       return await numberObjectReader.Read(stream, objectRepository);
 

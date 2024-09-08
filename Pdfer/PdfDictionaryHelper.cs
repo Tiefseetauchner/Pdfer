@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -9,10 +8,9 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
 {
   public async Task<(Dictionary<string, string> dictionary, byte[] bytes)> ReadDictionary(Stream stream)
   {
-
     var dictionary = new Dictionary<string, string>();
     using var rawBytes = new MemoryStream();
-    
+
     rawBytes.Write(await streamHelper.ReadStreamTo("<<", stream));
 
     var dictionaryDepth = 1;
@@ -63,7 +61,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
           bufferString += currentChar;
           break;
       }
-      
+
       if (bufferString.Length >= 2)
       {
         switch (bufferString[^2..])
