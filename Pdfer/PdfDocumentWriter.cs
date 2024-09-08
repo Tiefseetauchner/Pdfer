@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -43,25 +44,44 @@ public class PdfDocumentWriter : IPdfDocumentWriter
   {
     var xRefTableOffset = stream.Position;
     stream.Write("xref\n"u8);
-    stream.Write("0 "u8);
-    stream.Write(Encoding.ASCII.GetBytes(xRefTable.Count.ToString()));
-    stream.Write("\n"u8);
 
-    var previousObjectNumber = -1;
+    var xRefTableSection = new List<string>();
+
+    var firstObjectNumberInSection = 0;
+    int? previousObjectNumber = null;
+
     foreach (var (identifier, xRefEntry) in xRefTable.OrderBy(_ => _.Key.ObjectNumber))
     {
-      if (identifier.ObjectNumber != previousObjectNumber + 1)
-        throw new InvalidOperationException($"Object numbers are not consecutive: {previousObjectNumber} -> {identifier.ObjectNumber} (not yet supported)");
+      if (previousObjectNumber == null || identifier.ObjectNumber != previousObjectNumber + 1)
+      {
+        WriteXrefTableSection(stream, xRefTableSection, firstObjectNumberInSection);
+
+        xRefTableSection.Clear();
+        firstObjectNumberInSection = identifier.ObjectNumber;
+      }
+
 
       var flagCharacter = xRefEntry.Flag == XRefEntryType.Free ? 'f' : 'n';
 
-      stream.Write(Encoding.ASCII.GetBytes(
-        $"{xRefEntry.Position:0000000000} {identifier.Generation:00000} {flagCharacter} \n"));
+      xRefTableSection.Add($"{xRefEntry.Position:0000000000} {identifier.Generation:00000} {flagCharacter} \n");
 
-      previousObjectNumber++;
+      previousObjectNumber = identifier.ObjectNumber;
     }
 
+    WriteXrefTableSection(stream, xRefTableSection, firstObjectNumberInSection);
+
     return xRefTableOffset;
+  }
+
+  private void WriteXrefTableSection(Stream stream, List<string> xRefTableSection, int firstObjectNumberInSection)
+  {
+    if (xRefTableSection.Count == 0)
+      return;
+
+    stream.Write(Encoding.ASCII.GetBytes($"{firstObjectNumberInSection} {xRefTableSection.Count.ToString()}\n"));
+
+    var xRefTableEntries = string.Concat(xRefTableSection);
+    stream.Write(Encoding.ASCII.GetBytes(xRefTableEntries));
   }
 
   private void WriteHeader(Stream stream, Header pdfDocumentHeader)
