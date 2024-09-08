@@ -9,14 +9,15 @@ public class StreamObjectReader(IPdfDictionaryHelper dictionaryHelper, IStreamHe
   public async Task<StreamObject> Read(Stream stream, IObjectRepository objectRepository, byte[] objectIdentifier)
   {
     using var rawStream = new MemoryStream();
+    rawStream.Write(objectIdentifier);
 
     var (dictionary, rawBytes) = await dictionaryHelper.ReadDictionary(stream);
     rawStream.Write(rawBytes);
 
     var oldPosition = stream.Position;
-    var length = long.TryParse(dictionary["Length"], out var lengthNumber)
+    var length = long.TryParse(dictionary["/Length"], out var lengthNumber)
       ? lengthNumber
-      : (await objectRepository.RetrieveObject<IntegerObject>(ObjectIdentifier.ParseReference(dictionary["Length"]), stream))?.Value
+      : (await objectRepository.RetrieveObject<IntegerObject>(ObjectIdentifier.ParseReference(dictionary["/Length"]), stream))?.Value
         ?? throw new ArgumentException("Invalid length of stream object");
     stream.Position = oldPosition;
 

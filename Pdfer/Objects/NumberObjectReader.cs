@@ -13,7 +13,6 @@ public class NumberObjectReader(StreamHelper streamHelper) : IDocumentObjectRead
 
     var rawDataStream = new MemoryStream();
     rawDataStream.Write(objectIdentifier);
-    rawDataStream.Write("\n"u8);
     rawDataStream.Write(rawNumber);
     rawDataStream.Write("endobj"u8);
 

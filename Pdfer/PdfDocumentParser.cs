@@ -138,6 +138,8 @@ public class PdfDocumentParser(
     if (bytesRead != 7)
       throw new InvalidOperationException("No 'trailer' keyword found");
 
+    reverseStream.Position -= 8;
+
     return (await pdfDictionaryHelper.ReadDictionary(stream)).dictionary;
   }
 

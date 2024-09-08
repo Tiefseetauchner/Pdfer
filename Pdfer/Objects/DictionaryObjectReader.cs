@@ -8,7 +8,9 @@ public class DictionaryObjectReader(IStreamHelper streamHelper, IPdfDictionaryHe
   public async Task<DictionaryObject> Read(Stream stream, IObjectRepository objectRepository, byte[] objectIdentifier)
   {
     using var rawData = new MemoryStream();
-    
+
+    rawData.Write(objectIdentifier);
+
     var (dictionary, dictionaryBytes) = await pdfDictionaryHelper.ReadDictionary(stream);
     rawData.Write(dictionaryBytes);
 

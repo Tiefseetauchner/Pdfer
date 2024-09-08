@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Pdfer;
@@ -11,75 +12,67 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     var dictionary = new Dictionary<string, string>();
     using var rawBytes = new MemoryStream();
 
-    rawBytes.Write(await streamHelper.ReadStreamTo("<<", stream));
-    rawBytes.Write("<<"u8);
+    var dictionaryDepth = 0;
+    var bufferStringBuilder = new StringBuilder();
 
-    var dictionaryDepth = 1;
-    var bufferString = "";
+    var firstChar = streamHelper.ReadChar(stream);
+    bufferStringBuilder.Append(firstChar);
+    rawBytes.WriteByte((byte)firstChar);
+
     var arrayKeyReading = false;
-    var arrayKey = "";
+    string? arrayKey = null;
+    var buffer = new byte[1];
 
-    while (stream.Position < stream.Length && dictionaryDepth > 0)
+    do
     {
-      var currentChar = streamHelper.ReadChar(stream);
-      rawBytes.WriteByte((byte)currentChar);
+      if (await stream.ReadAsync(buffer) == 0)
+        throw new IOException("Unexpected end of stream");
 
-      switch (currentChar)
+      var character = (char)buffer[0];
+
+      rawBytes.Write(buffer);
+
+      if (dictionaryDepth == 1)
       {
-        case '/':
-          switch (arrayKeyReading)
-          {
-            case false when bufferString.Length > 0 && dictionaryDepth == 1:
-              dictionary[arrayKey] = bufferString.Trim();
-
-              bufferString = "";
-              arrayKeyReading = true;
-              break;
-
-            case false when bufferString.Length == 0:
-              arrayKeyReading = true;
-              break;
-            case false when dictionaryDepth > 1:
-            case true:
-              bufferString += currentChar;
-              break;
-          }
-
-          break;
-        case ' ':
-        case '<':
-          if (arrayKeyReading)
-          {
-            arrayKey = bufferString;
-            arrayKeyReading = false;
-            bufferString = currentChar.ToString();
-          }
-          else
-            bufferString += currentChar;
-
-          break;
-        default:
-          bufferString += currentChar;
-          break;
-      }
-
-      if (bufferString.Length >= 2)
-      {
-        switch (bufferString[^2..])
+        switch (character)
         {
-          case "<<":
-            dictionaryDepth++;
+          case '/' when !arrayKeyReading && (!string.IsNullOrWhiteSpace(bufferStringBuilder.ToString()) || arrayKey == null):
+            arrayKeyReading = true;
+
+            if (arrayKey != null)
+              dictionary[arrayKey] = bufferStringBuilder.ToString().Trim();
+
+            bufferStringBuilder = new StringBuilder();
             break;
-          case ">>":
-            dictionaryDepth--;
-
-            if (dictionaryDepth < 1 && !arrayKeyReading && arrayKey.Length > 0 && !string.IsNullOrWhiteSpace(bufferString[..^2]))
-              dictionary[arrayKey] = bufferString[..^2].Trim();
-
+          case '/' when arrayKeyReading:
+          case ' ' when arrayKeyReading:
+          case '\n' when arrayKeyReading:
+          case '\r' when arrayKeyReading:
+          case '[' when arrayKeyReading:
+          case '(' when arrayKeyReading:
+            arrayKeyReading = false;
+            arrayKey = bufferStringBuilder.ToString().Trim();
+            bufferStringBuilder = new StringBuilder();
             break;
         }
       }
-    }
+
+      switch (character)
+      {
+        case '<' when (bufferStringBuilder.Length > 0 && bufferStringBuilder[^1] == '<'):
+          dictionaryDepth++;
+          break;
+        case '>' when (bufferStringBuilder.Length > 0 && bufferStringBuilder[^1] == '>'):
+          dictionaryDepth--;
+          break;
+      }
+
+      bufferStringBuilder.Append(character);
+    } while (dictionaryDepth > 0);
+
+
+    if (arrayKey != null)
+      dictionary[arrayKey] = bufferStringBuilder.ToString()[..^2].Trim();
 
     return (dictionary, rawBytes.ToArray());
   }

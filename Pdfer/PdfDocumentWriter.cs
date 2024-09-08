@@ -114,7 +114,7 @@ public class PdfDocumentWriter : IPdfDocumentWriter
     stream.Write("<<"u8);
     foreach (var (key, value) in pdfDocumentTrailer.TrailerDictionary)
     {
-      stream.Write("\n/"u8);
+      stream.Write("\ngit"u8);
       stream.Write(Encoding.ASCII.GetBytes(key));
       stream.Write(" "u8);
       stream.Write(Encoding.ASCII.GetBytes(value));
