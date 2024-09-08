@@ -20,7 +20,7 @@ public class PdfObjectReader(
   {
     stream.Position = xRefEntry.Position;
 
-    await streamHelper.ReadStreamTo("\n", stream);
+    var objectIdentifier = await streamHelper.ReadStreamTo("\n", stream);
 
     var objectStartBuffer = new byte[2];
     var objectStart = await stream.ReadAsync(objectStartBuffer);
@@ -32,7 +32,7 @@ public class PdfObjectReader(
     if (objectStartBuffer[0] == '<' &&
         objectStartBuffer[0] != '<' ||
         objectStartBuffer[0] == '(')
-      return await stringObjectReader.Read(stream, objectRepository);
+      return await stringObjectReader.Read(stream, objectRepository, objectIdentifier);
 
     if (objectStartBuffer[0] == '<' &&
         objectStartBuffer[0] == '<')
@@ -45,13 +45,13 @@ public class PdfObjectReader(
       stream.Position = xRefEntry.Position;
 
       if (contentAfterDictionary.Trim().StartsWith("stream"))
-        return await streamObjectReader.Read(stream, objectRepository);
+        return await streamObjectReader.Read(stream, objectRepository, objectIdentifier);
 
-      return await dictionaryObjectReader.Read(stream, objectRepository);
+      return await dictionaryObjectReader.Read(stream, objectRepository, objectIdentifier);
     }
 
     if (char.IsNumber((char)objectStartBuffer[0]))
-      return await numberObjectReader.Read(stream, objectRepository);
+      return await numberObjectReader.Read(stream, objectRepository, objectIdentifier);
 
     return null!;
   }

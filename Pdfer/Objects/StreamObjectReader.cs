@@ -6,7 +6,7 @@ namespace Pdfer.Objects;
 
 public class StreamObjectReader(IPdfDictionaryHelper dictionaryHelper, IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
 {
-  public async Task<StreamObject> Read(Stream stream, IObjectRepository objectRepository)
+  public async Task<StreamObject> Read(Stream stream, IObjectRepository objectRepository, byte[] objectIdentifier)
   {
     using var rawStream = new MemoryStream();
 

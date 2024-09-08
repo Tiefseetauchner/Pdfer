@@ -12,6 +12,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     using var rawBytes = new MemoryStream();
 
     rawBytes.Write(await streamHelper.ReadStreamTo("<<", stream));
+    rawBytes.Write("<<"u8);
 
     var dictionaryDepth = 1;
     var bufferString = "";

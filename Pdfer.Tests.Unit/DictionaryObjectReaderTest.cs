@@ -18,7 +18,7 @@ public class DictionaryObjectReaderTest
                                         >>
                                         """u8.ToArray());
 
-    var result = await new DictionaryObjectReader(new StreamHelper(), new PdfDictionaryHelper(new StreamHelper())).Read(stream, null!);
+    var result = await new DictionaryObjectReader(new StreamHelper(), new PdfDictionaryHelper(new StreamHelper())).Read(stream, null!, []);
 
     Assert.That(result.Value, Is.EqualTo(new Dictionary<string, string>()
     {
