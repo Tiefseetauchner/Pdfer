@@ -20,13 +20,7 @@ class Program
 
     pdfDocument.Body.Objects.ToList().ForEach(obj => Console.WriteLine($"body object: {obj.Key.ObjectNumber}, {obj.Value}"));
 
-    await using (var outputStream = File.OpenWrite(args[1]))
-    {
-      new PdfDocumentWriter().Write(outputStream, pdfDocument);
-    }
-
-    Console.Write("Press any key to exit...");
-    Console.ReadKey();
-    Console.WriteLine();
+    await using var outputStream = File.OpenWrite(args[1]);
+    new PdfDocumentWriter().Write(outputStream, pdfDocument);
   }
 }
