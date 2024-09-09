@@ -57,7 +57,8 @@ writer.Write(stream, document);
 
 - The parser doesn't currently support multilayer PDFs.
 - Things like signed PDFs with multiple trailers don't work.
-- Writing PDFs currently only really works for extraordinarily simple PDFs.
+- Writing PDFs currently only really works for extraordinarily simple **and conform** PDFs.
+- Pdfs with `\r\n` delimiters are not supported
 
 ## Why
 I and someone I know want a library that allows us to easily manipulate PDFs on a object level, so I decided to parse PDFs.
