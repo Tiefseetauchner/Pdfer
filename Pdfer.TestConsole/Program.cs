@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Pdfer.Objects;
 
 namespace Pdfer.TestConsole;
 
@@ -12,13 +13,10 @@ class Program
     Console.WriteLine("Hello Pdfer!");
 
     var pdfDocument = await new PdfDocumentParserFactory().Create().Parse(File.OpenRead(args[0]));
-
-    Console.WriteLine($"PdfVersion:       {pdfDocument.PdfVersion}");
-    pdfDocument.Trailer.TrailerDictionary.ToList().ForEach(entry => Console.WriteLine($"trailer entry: {entry.Key} {entry.Value}"));
-    Console.WriteLine($"startxref offset: {pdfDocument.Trailer.XRefByteOffset}");
-    pdfDocument.XRefTable.ToList().ForEach(entry => Console.WriteLine($"xref entry: {entry.Key} {entry.Value}"));
-
-    pdfDocument.Body.Objects.ToList().ForEach(obj => Console.WriteLine($"body object: {obj.Key.ObjectNumber}, {obj.Value}"));
+    
+    var infoReference = ObjectIdentifier.ParseReference(pdfDocument.Trailer.TrailerDictionary["/Info"]);
+    var infoDictionary = pdfDocument.Body[infoReference] as DictionaryObject ?? throw new InvalidOperationException("Info dictionary not found");
+    infoDictionary.Value["/Producer"] = new PdfStringHelper().GetHexString("My PDFer");
 
     await using var outputStream = File.OpenWrite(args[1]);
     outputStream.SetLength(0);

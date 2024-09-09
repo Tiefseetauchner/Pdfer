@@ -50,6 +50,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
           case '\r' when arrayKeyReading:
           case '[' when arrayKeyReading:
           case '(' when arrayKeyReading:
+          case '<' when arrayKeyReading:
             arrayKeyReading = false;
             arrayKey = bufferStringBuilder.ToString().Trim();
             bufferStringBuilder = new StringBuilder();
