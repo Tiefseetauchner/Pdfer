@@ -12,6 +12,7 @@ public class PdfDocumentWriterFactory
       new DictionaryObjectSerializer(pdfDictionaryHelper),
       new NumberObjectSerializer(),
       new StreamObjectSerializer(pdfDictionaryHelper),
-      new StringObjectSerializer());
+      new StringObjectSerializer(),
+      new NameObjectSerializer());
   }
 }

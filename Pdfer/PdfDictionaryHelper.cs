@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -29,7 +30,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
         throw new IOException("Unexpected end of stream");
 
       var character = (char)buffer[0];
-      
+
       rawBytes.Write(buffer);
 
       if (bracketDepth == 2)
@@ -40,7 +41,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
             arrayKeyReading = true;
 
             if (arrayKey != null)
-              dictionary[arrayKey] = bufferStringBuilder.ToString().Trim();
+              AddDictionaryEntry(dictionary, arrayKey, bufferStringBuilder.ToString());
 
             bufferStringBuilder = new StringBuilder();
             break;
@@ -51,13 +52,14 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
           case '[' when arrayKeyReading:
           case '(' when arrayKeyReading:
           case '<' when arrayKeyReading:
+          case '>' when arrayKeyReading:
             arrayKeyReading = false;
             arrayKey = bufferStringBuilder.ToString().Trim();
             bufferStringBuilder = new StringBuilder();
             break;
         }
       }
-      
+
       switch (character)
       {
         case '<' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
@@ -73,9 +75,19 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
 
 
     if (arrayKey != null)
-      dictionary[arrayKey] = bufferStringBuilder.ToString()[..^2].Trim();
+      AddDictionaryEntry(dictionary, arrayKey, bufferStringBuilder.ToString()[..^2]);
 
     return (dictionary, rawBytes.ToArray());
+  }
+
+  private static void AddDictionaryEntry(Dictionary<string, string> dictionary, string arrayKey, string bufferString)
+  {
+    if (dictionary.ContainsKey(arrayKey))
+      throw new InvalidOperationException($"Duplicate key '{arrayKey}' in dictionary");
+    if (bufferString.Trim().Length == 0)
+      throw new InvalidOperationException($"Empty value for key '{arrayKey}' in dictionary");
+
+    dictionary[arrayKey] = bufferString.ToString().Trim();
   }
 
   public async Task<byte[]> GetDictionaryBytes(Dictionary<string, string> dictionary)

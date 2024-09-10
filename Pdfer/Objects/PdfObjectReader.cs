@@ -10,7 +10,8 @@ public class PdfObjectReader(
   IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
   IDocumentObjectReader<StringObject> stringObjectReader,
   IDocumentObjectReader<StreamObject> streamObjectReader,
-  IDocumentObjectReader<NumberObject> numberObjectReader) : IPdfObjectReader
+  IDocumentObjectReader<NumberObject> numberObjectReader,
+  IDocumentObjectReader<NameObject> nameObjectReader) : IPdfObjectReader
 {
   // TODO (lena): Deal with NameObjects
   // TODO (lena): Deal with BooleanObjects
@@ -52,6 +53,9 @@ public class PdfObjectReader(
 
     if (char.IsNumber((char)objectStartBuffer[0]))
       return await numberObjectReader.Read(stream, objectRepository, objectIdentifier);
+
+    if ((char)objectStartBuffer[0] == '/')
+      return await nameObjectReader.Read(stream, objectRepository, objectIdentifier);
 
     return null!;
   }

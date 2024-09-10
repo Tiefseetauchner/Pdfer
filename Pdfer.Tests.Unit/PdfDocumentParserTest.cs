@@ -45,13 +45,16 @@ public class PdfDocumentParserTest
       Assert.That(pdfDocument.Header.ContainsBinaryDataHeader, Is.True);
       Assert.That(pdfDocument.Trailer.XRefByteOffset, Is.EqualTo(7530));
 
-      Assert.That(pdfDocument.Trailer.TrailerDictionary, Has.Count.EqualTo(4));
-      Assert.That(pdfDocument.Trailer.TrailerDictionary["Size"], Is.EqualTo("18"));
-      Assert.That(pdfDocument.Trailer.TrailerDictionary["Root"], Is.EqualTo("16 0 R"));
-      Assert.That(pdfDocument.Trailer.TrailerDictionary["ID"], Is.EqualTo("[ <5414416A1ACD8FC419744A93F45175A8>\n<5414416A1ACD8FC419744A93F45175A8> ]"));
+      Assert.That(pdfDocument.Trailer.TrailerDictionary, Has.Count.EqualTo(5));
+      Assert.That(pdfDocument.Trailer.TrailerDictionary["/Size"], Is.EqualTo("18"));
+      Assert.That(pdfDocument.Trailer.TrailerDictionary["/Root"], Is.EqualTo("16 0 R"));
+      Assert.That(pdfDocument.Trailer.TrailerDictionary["/ID"], Is.EqualTo("[ <5414416A1ACD8FC419744A93F45175A8>\n<5414416A1ACD8FC419744A93F45175A8> ]"));
+      Assert.That(pdfDocument.Trailer.TrailerDictionary["/DocChecksum"], Is.EqualTo("/AC2F9689252F6547045729CC0AC89AAD"));
 
       Assert.That(pdfDocument.XRefTable, Has.Count.EqualTo(18));
       Assert.That(pdfDocument.XRefTable[new ObjectIdentifier(0, 65_535)], Is.EqualTo(new XRefEntry(0, XRefEntryType.Free)));
+
+      Assert.That(pdfDocument.Body.Objects, Has.Count.EqualTo(17));
     });
   }
 

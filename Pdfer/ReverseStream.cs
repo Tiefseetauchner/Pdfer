@@ -6,6 +6,7 @@ namespace Pdfer;
 public class ReverseStream : Stream
 {
   readonly Stream stream;
+
   public ReverseStream(Stream stream)
   {
     if (!stream.CanSeek) throw new Exception("Stream cannot seek");
@@ -30,10 +31,7 @@ public class ReverseStream : Stream
       return position;
     }
 
-    set
-    {
-      stream.Position = stream.Length - value;
-    }
+    set => stream.Position = stream.Length - value;
   }
 
   public override int Read(byte[] buffer, int offset, int count)
@@ -53,6 +51,15 @@ public class ReverseStream : Stream
 
     Array.Reverse(buffer, offset, bytesRead);
 
+    // Adjust for \r\n
+    for (var i = offset; i < offset + bytesRead - 1; i++)
+    {
+      if (buffer[i] != '\n' || buffer[i + 1] != '\r')
+        continue;
+
+      (buffer[i], buffer[i + 1]) = (buffer[i + 1], buffer[i]);
+    }
+
     return bytesRead;
   }
 
@@ -71,6 +78,8 @@ public class ReverseStream : Stream
       case SeekOrigin.Current:
         stream.Seek(-offset, SeekOrigin.Current);
         break;
+      default:
+        throw new ArgumentOutOfRangeException(nameof(origin), origin, null);
     }
 
     return Position;
@@ -83,6 +92,7 @@ public class ReverseStream : Stream
   public override void Write(byte[] buffer, int offset, int count)
   {
   }
+
   public override void Flush()
   {
   }

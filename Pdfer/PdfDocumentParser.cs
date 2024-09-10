@@ -86,6 +86,9 @@ public class PdfDocumentParser(
 
     var trailerDictionary = await GetTrailerDictionary(reverseStream, stream, streamReader);
 
+    if (trailerDictionary.TryGetValue("/Prev", out var value))
+      xrefOffset = long.Parse(value);
+
     return new Trailer(trailerDictionary, xrefOffset);
   }
 
@@ -138,7 +141,7 @@ public class PdfDocumentParser(
     if (bytesRead != 7)
       throw new InvalidOperationException("No 'trailer' keyword found");
 
-    reverseStream.Position -= 8;
+    await streamHelper.ReadStreamTo("\n", stream);
 
     return (await pdfDictionaryHelper.ReadDictionary(stream)).dictionary;
   }
@@ -146,7 +149,7 @@ public class PdfDocumentParser(
 
   private async Task<XRefTable> GetXrefTable(StreamReader streamReader, long xrefOffset)
   {
-    streamReader.BaseStream.Position = xrefOffset;
+    streamReader.BaseStream.Seek(xrefOffset, SeekOrigin.Begin);
     streamReader.DiscardBufferedData();
 
     var xRefTable = new XRefTable();
@@ -165,6 +168,12 @@ public class PdfDocumentParser(
     return xRefTable;
   }
 
+  private (int ObjectNumber, int RemainingInSection) ParseSubsectionHeader(string line)
+  {
+    var subsectionHeaderParts = line.Split(' ');
+    return (int.Parse(subsectionHeaderParts[0]), int.Parse(subsectionHeaderParts[1]));
+  }
+
   private async Task AddXRefEntriesInSubsection(int objectsInSection, StreamReader streamReader, int objectNumber, XRefTable xRefTable)
   {
     for (var i = 0; i < objectsInSection; i++)
@@ -178,12 +187,6 @@ public class PdfDocumentParser(
       xRefTable.Add(objectIdentifier, xRefEntry);
       objectNumber++;
     }
-  }
-
-  private (int ObjectNumber, int RemainingInSection) ParseSubsectionHeader(string line)
-  {
-    var subsectionHeaderParts = line.Split(' ');
-    return (int.Parse(subsectionHeaderParts[0]), int.Parse(subsectionHeaderParts[1]));
   }
 
   private (ObjectIdentifier, XRefEntry) GetXrefEntry(string line, int objectNumber)

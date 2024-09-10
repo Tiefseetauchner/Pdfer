@@ -13,7 +13,8 @@ public class PdfDocumentWriter(
   IDocumentObjectSerializer<DictionaryObject> dictionaryObjectSerializer,
   IDocumentObjectSerializer<NumberObject> numberObjectSerializer,
   IDocumentObjectSerializer<StreamObject> streamObjectSerializer,
-  IDocumentObjectSerializer<StringObject> stringObjectSerializer) : IPdfDocumentWriter
+  IDocumentObjectSerializer<StringObject> stringObjectSerializer,
+  IDocumentObjectSerializer<NameObject> nameObjectSerializer) : IPdfDocumentWriter
 {
   public async Task Write(Stream stream, PdfDocument pdfDocument)
   {
@@ -77,6 +78,7 @@ public class PdfDocumentWriter(
       NumberObject numberObject => await numberObjectSerializer.Serialize(numberObject),
       StreamObject streamObject => await streamObjectSerializer.Serialize(streamObject),
       StringObject stringObject => await stringObjectSerializer.Serialize(stringObject),
+      NameObject nameObject => await nameObjectSerializer.Serialize(nameObject),
       _ => throw new InvalidOperationException($"Unknown object type '{value.GetType()}'")
     };
 
