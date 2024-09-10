@@ -12,7 +12,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     var dictionary = new Dictionary<string, string>();
     using var rawBytes = new MemoryStream();
 
-    var dictionaryDepth = 0;
+    var bracketDepth = 1;
     var bufferStringBuilder = new StringBuilder();
 
     var firstChar = streamHelper.ReadChar(stream);
@@ -23,16 +23,16 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     string? arrayKey = null;
     var buffer = new byte[1];
 
-    do
+    while (bracketDepth > 0)
     {
       if (await stream.ReadAsync(buffer) == 0)
         throw new IOException("Unexpected end of stream");
 
       var character = (char)buffer[0];
-
+      
       rawBytes.Write(buffer);
 
-      if (dictionaryDepth == 1)
+      if (bracketDepth == 2)
       {
         switch (character)
         {
@@ -57,19 +57,19 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
             break;
         }
       }
-
+      
       switch (character)
       {
-        case '<' when (bufferStringBuilder.Length > 0 && bufferStringBuilder[^1] == '<'):
-          dictionaryDepth++;
+        case '<' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
+          bracketDepth++;
           break;
-        case '>' when (bufferStringBuilder.Length > 0 && bufferStringBuilder[^1] == '>'):
-          dictionaryDepth--;
+        case '>' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
+          bracketDepth--;
           break;
       }
 
       bufferStringBuilder.Append(character);
-    } while (dictionaryDepth > 0);
+    }
 
 
     if (arrayKey != null)
