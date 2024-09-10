@@ -59,6 +59,7 @@ writer.Write(stream, document);
 - Things like signed PDFs with multiple trailers don't work.
 - Writing PDFs currently only really works for extraordinarily simple **and conform** PDFs.
 - Pdfs with `\r\n` delimiters are not supported
+- Encoding is all over the place. Best to just use ASCII in your PDFs.
 
 ## Why
 I and someone I know want a library that allows us to easily manipulate PDFs on a object level, so I decided to parse PDFs.
