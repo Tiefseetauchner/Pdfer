@@ -11,7 +11,8 @@ public class PdfObjectReader(
   IDocumentObjectReader<StringObject> stringObjectReader,
   IDocumentObjectReader<StreamObject> streamObjectReader,
   IDocumentObjectReader<NumberObject> numberObjectReader,
-  IDocumentObjectReader<NameObject> nameObjectReader) : IPdfObjectReader
+  IDocumentObjectReader<NameObject> nameObjectReader,
+  IDocumentObjectReader<ArrayObject> arrayObjectReader) : IPdfObjectReader
 {
   // TODO (lena): Deal with NameObjects
   // TODO (lena): Deal with BooleanObjects
@@ -34,6 +35,9 @@ public class PdfObjectReader(
         objectStartBuffer[1] != '<' ||
         objectStartBuffer[0] == '(')
       return await stringObjectReader.Read(stream, objectRepository, objectIdentifier);
+
+    if (objectStartBuffer[0] == '[')
+      return await arrayObjectReader.Read(stream, objectRepository, objectIdentifier);
 
     if (objectStartBuffer[0] == '<' &&
         objectStartBuffer[1] == '<')

@@ -20,8 +20,8 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     bufferStringBuilder.Append(firstChar);
     rawBytes.WriteByte((byte)firstChar);
 
-    var arrayKeyReading = false;
-    string? arrayKey = null;
+    var keyReading = false;
+    string? key = null;
     var buffer = new byte[1];
 
     while (bracketDepth > 0)
@@ -37,24 +37,24 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
       {
         switch (character)
         {
-          case '/' when !arrayKeyReading && (!string.IsNullOrWhiteSpace(bufferStringBuilder.ToString()) || arrayKey == null):
-            arrayKeyReading = true;
+          case '/' when !keyReading && (!string.IsNullOrWhiteSpace(bufferStringBuilder.ToString()) || key == null):
+            keyReading = true;
 
-            if (arrayKey != null)
-              AddDictionaryEntry(dictionary, arrayKey, bufferStringBuilder.ToString());
+            if (key != null)
+              AddDictionaryEntry(dictionary, key, bufferStringBuilder.ToString());
 
             bufferStringBuilder = new StringBuilder();
             break;
-          case '/' when arrayKeyReading:
-          case ' ' when arrayKeyReading:
-          case '\n' when arrayKeyReading:
-          case '\r' when arrayKeyReading:
-          case '[' when arrayKeyReading:
-          case '(' when arrayKeyReading:
-          case '<' when arrayKeyReading:
-          case '>' when arrayKeyReading:
-            arrayKeyReading = false;
-            arrayKey = bufferStringBuilder.ToString().Trim();
+          case '/' when keyReading:
+          case ' ' when keyReading:
+          case '\n' when keyReading:
+          case '\r' when keyReading:
+          case '[' when keyReading:
+          case '(' when keyReading:
+          case '<' when keyReading:
+          case '>' when keyReading:
+            keyReading = false;
+            key = bufferStringBuilder.ToString().Trim();
             bufferStringBuilder = new StringBuilder();
             break;
         }
@@ -74,8 +74,8 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     }
 
 
-    if (arrayKey != null)
-      AddDictionaryEntry(dictionary, arrayKey, bufferStringBuilder.ToString()[..^2]);
+    if (key != null)
+      AddDictionaryEntry(dictionary, key, bufferStringBuilder.ToString()[..^2]);
 
     return (dictionary, rawBytes.ToArray());
   }
@@ -100,6 +100,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
   public async Task WriteDictionary(Stream stream, Dictionary<string, string> dictionary)
   {
     await stream.WriteAsync("<<"u8.ToArray());
+
     foreach (var (key, value) in dictionary)
     {
       await stream.WriteAsync("\n"u8.ToArray());
