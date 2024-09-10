@@ -31,4 +31,20 @@ public class StreamHelper : IStreamHelper
 
   public char ReadChar(Stream stream) =>
     (char)stream.ReadByte();
+
+  public async Task<byte[]> SkipWhiteSpaceCharacters(Stream stream)
+  {
+    using var rawBytes = new MemoryStream();
+
+    var buffer = new byte[1];
+
+    while (stream.Read(buffer) == 1 && char.IsWhiteSpace((char)buffer[0]) || buffer[0] == '\r' || buffer[0] == '\n')
+    {
+      await rawBytes.WriteAsync(buffer);
+    }
+
+    stream.Position--;
+
+    return rawBytes.ToArray();
+  }
 }

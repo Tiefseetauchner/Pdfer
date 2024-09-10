@@ -14,7 +14,6 @@ public class PdfObjectReader(
   IDocumentObjectReader<NameObject> nameObjectReader,
   IDocumentObjectReader<ArrayObject> arrayObjectReader) : IPdfObjectReader
 {
-  // TODO (lena): Deal with NameObjects
   // TODO (lena): Deal with BooleanObjects
   // TODO (lena): Deal with NullObjects
   public async Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, ObjectIdentifier objectIdentifier, IObjectRepository objectRepository)
@@ -44,6 +43,9 @@ public class PdfObjectReader(
     {
       // IMPROVE (lena): This is not a good way to check if it is a stream. We're reading the whole dictionary twice.
       await pdfDictionaryHelper.ReadDictionary(stream);
+
+      await streamHelper.SkipWhiteSpaceCharacters(stream);
+
       var buffer = new byte[7];
       _ = await stream.ReadAsync(buffer);
       var contentAfterDictionary = Encoding.ASCII.GetString(buffer);
