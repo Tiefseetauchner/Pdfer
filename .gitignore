@@ -7,4 +7,5 @@ riderModule.iml
 /.vs/
 *DotSettings.user
 .vscode/
-output.pdf
+output.*
+input.*
