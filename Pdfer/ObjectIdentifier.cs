@@ -13,7 +13,7 @@ public record ObjectIdentifier(
   }
 
   public byte[] GetHeaderBytes() =>
-    Encoding.ASCII.GetBytes(GetHeaderString());
+    Encoding.UTF8.GetBytes(GetHeaderString());
 
   public string GetHeaderString() =>
     $"{ObjectNumber} {Generation} obj\n";

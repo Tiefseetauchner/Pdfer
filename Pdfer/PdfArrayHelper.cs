@@ -63,7 +63,7 @@ public class PdfArrayHelper(IStreamHelper streamHelper) : IPdfArrayHelper
 
     foreach (var value in array)
     {
-      await stream.WriteAsync(Encoding.ASCII.GetBytes(value));
+      await stream.WriteAsync(Encoding.UTF8.GetBytes(value));
       await stream.WriteAsync(" "u8.ToArray());
     }
 

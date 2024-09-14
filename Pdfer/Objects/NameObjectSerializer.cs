@@ -6,14 +6,10 @@ namespace Pdfer.Objects;
 
 public class NameObjectSerializer : IDocumentObjectSerializer<NameObject>
 {
-  public async Task<byte[]> Serialize(NameObject documentObject)
+  public async Task Serialize(Stream stream, NameObject documentObject)
   {
-    using var memoryStream = new MemoryStream();
-
-    await memoryStream.WriteAsync(documentObject.ObjectIdentifier.GetHeaderBytes());
-    await memoryStream.WriteAsync(Encoding.ASCII.GetBytes(documentObject.Value));
-    await memoryStream.WriteAsync("\nendobj"u8.ToArray());
-
-    return memoryStream.ToArray();
+    await stream.WriteAsync(documentObject.ObjectIdentifier.GetHeaderBytes());
+    await stream.WriteAsync(Encoding.UTF8.GetBytes(documentObject.Value));
+    await stream.WriteAsync("\nendobj"u8.ToArray());
   }
 }

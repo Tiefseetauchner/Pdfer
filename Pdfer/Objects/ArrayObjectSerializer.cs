@@ -5,15 +5,10 @@ namespace Pdfer.Objects;
 
 public class ArrayObjectSerializer(IPdfArrayHelper pdfArrayHelper) : IDocumentObjectSerializer<ArrayObject>
 {
-  public async Task<byte[]> Serialize(ArrayObject documentObject)
+  public async Task Serialize(Stream stream, ArrayObject documentObject)
   {
-    using var memoryStream = new MemoryStream();
-
-    await memoryStream.WriteAsync(documentObject.ObjectIdentifier.GetHeaderBytes());
-    await pdfArrayHelper.WriteArray(memoryStream, documentObject.Value);
-    await memoryStream.WriteAsync("\nendobj"u8.ToArray());
-
-    return memoryStream.ToArray();
-
+    await stream.WriteAsync(documentObject.ObjectIdentifier.GetHeaderBytes());
+    await pdfArrayHelper.WriteArray(stream, documentObject.Value);
+    await stream.WriteAsync("\nendobj"u8.ToArray());
   }
 }

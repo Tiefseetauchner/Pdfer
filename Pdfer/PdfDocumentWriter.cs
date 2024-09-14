@@ -71,20 +71,34 @@ public class PdfDocumentWriter(
     return xRefTable;
   }
 
+  // TODO (lena): Write to stream directly
   private async Task WriteObject(Stream stream, DocumentObject value)
   {
-    var bytes = value switch
+    switch (value)
     {
-      DictionaryObject dictionaryObject => await dictionaryObjectSerializer.Serialize(dictionaryObject),
-      NumberObject numberObject => await numberObjectSerializer.Serialize(numberObject),
-      StreamObject streamObject => await streamObjectSerializer.Serialize(streamObject),
-      StringObject stringObject => await stringObjectSerializer.Serialize(stringObject),
-      NameObject nameObject => await nameObjectSerializer.Serialize(nameObject),
-      ArrayObject arrayObject => await arrayObjectSerializer.Serialize(arrayObject),
-      _ => throw new InvalidOperationException($"Unknown object type '{value.GetType()}'")
-    };
+      case DictionaryObject dictionaryObject:
+        await dictionaryObjectSerializer.Serialize(stream, dictionaryObject);
+        break;
+      case NumberObject numberObject:
+        await numberObjectSerializer.Serialize(stream, numberObject);
+        break;
+      case StreamObject streamObject:
+        await streamObjectSerializer.Serialize(stream, streamObject);
+        break;
+      case StringObject stringObject:
+        await stringObjectSerializer.Serialize(stream, stringObject);
+        break;
+      case NameObject nameObject:
+        await nameObjectSerializer.Serialize(stream, nameObject);
+        break;
+      case ArrayObject arrayObject:
+        await arrayObjectSerializer.Serialize(stream, arrayObject);
+        break;
+      default:
+        throw new InvalidOperationException($"Unknown object type '{value.GetType()}'");
+    }
 
-    await stream.WriteAsync(bytes);
+    await stream.FlushAsync();
   }
 
   private long WriteXrefTable(Stream stream, XRefTable xRefTable)
@@ -125,10 +139,10 @@ public class PdfDocumentWriter(
     if (xRefTableSection.Count == 0)
       return;
 
-    stream.Write(Encoding.ASCII.GetBytes($"{firstObjectNumberInSection} {xRefTableSection.Count.ToString()}\n"));
+    stream.Write(Encoding.UTF8.GetBytes($"{firstObjectNumberInSection} {xRefTableSection.Count.ToString()}\n"));
 
     var xRefTableEntries = string.Concat(xRefTableSection);
-    stream.Write(Encoding.ASCII.GetBytes(xRefTableEntries));
+    stream.Write(Encoding.UTF8.GetBytes(xRefTableEntries));
   }
 
   // TODO (lena): Change Size in Trailer
@@ -140,7 +154,7 @@ public class PdfDocumentWriter(
 
     await stream.WriteAsync("\n"u8.ToArray());
     await stream.WriteAsync("startxref\n"u8.ToArray());
-    await stream.WriteAsync(Encoding.ASCII.GetBytes(xRefTableOffset.ToString()));
+    await stream.WriteAsync(Encoding.UTF8.GetBytes(xRefTableOffset.ToString()));
     await stream.WriteAsync("\n"u8.ToArray());
     await stream.WriteAsync("%%EOF\n"u8.ToArray());
   }

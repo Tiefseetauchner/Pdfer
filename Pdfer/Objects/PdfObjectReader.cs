@@ -48,7 +48,7 @@ public class PdfObjectReader(
 
       var buffer = new byte[7];
       _ = await stream.ReadAsync(buffer);
-      var contentAfterDictionary = Encoding.ASCII.GetString(buffer);
+      var contentAfterDictionary = Encoding.UTF8.GetString(buffer);
       stream.Position = streamPositionAfterObjectStart;
 
       if (contentAfterDictionary.Trim().StartsWith("stream"))

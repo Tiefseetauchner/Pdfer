@@ -21,6 +21,9 @@ public class StreamObjectReader(IPdfDictionaryHelper dictionaryHelper, IStreamHe
         ?? throw new ArgumentException("Invalid length of stream object");
     stream.Position = oldPosition;
 
+    await streamHelper.ReadStreamTo("stream", stream);
+    await streamHelper.SkipWhiteSpaceCharacters(stream);
+
     var buffer = new byte[length];
     var bytesRead = await stream.ReadAsync(buffer);
 

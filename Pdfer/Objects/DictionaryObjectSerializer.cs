@@ -5,14 +5,10 @@ namespace Pdfer.Objects;
 
 public class DictionaryObjectSerializer(IPdfDictionaryHelper pdfDictionaryHelper) : IDocumentObjectSerializer<DictionaryObject>
 {
-  public async Task<byte[]> Serialize(DictionaryObject documentObject)
+  public async Task Serialize(Stream stream, DictionaryObject documentObject)
   {
-    using var memoryStream = new MemoryStream();
-
-    await memoryStream.WriteAsync(documentObject.ObjectIdentifier.GetHeaderBytes());
-    await pdfDictionaryHelper.WriteDictionary(memoryStream, documentObject.Value);
-    await memoryStream.WriteAsync("\nendobj"u8.ToArray());
-
-    return memoryStream.ToArray();
+    await stream.WriteAsync(documentObject.ObjectIdentifier.GetHeaderBytes());
+    await pdfDictionaryHelper.WriteDictionary(stream, documentObject.Value);
+    await stream.WriteAsync("\nendobj"u8.ToArray());
   }
 }

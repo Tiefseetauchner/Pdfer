@@ -63,9 +63,13 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
       switch (character)
       {
         case '<' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
+        case '[' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
+        case '(' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
           bracketDepth++;
           break;
         case '>' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
+        case ']' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
+        case ')' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
           bracketDepth--;
           break;
       }
@@ -104,9 +108,9 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     foreach (var (key, value) in dictionary)
     {
       await stream.WriteAsync("\n"u8.ToArray());
-      await stream.WriteAsync(Encoding.ASCII.GetBytes(key));
+      await stream.WriteAsync(Encoding.UTF8.GetBytes(key));
       await stream.WriteAsync(" "u8.ToArray());
-      await stream.WriteAsync(Encoding.ASCII.GetBytes(value));
+      await stream.WriteAsync(Encoding.UTF8.GetBytes(value));
     }
 
     await stream.WriteAsync(">>"u8.ToArray());
