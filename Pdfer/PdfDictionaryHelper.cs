@@ -13,7 +13,6 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     var dictionary = new Dictionary<string, string>();
     using var rawBytes = new MemoryStream();
 
-    var bracketDepth = 1;
     var bufferStringBuilder = new StringBuilder();
 
     var firstChar = streamHelper.ReadChar(stream);
@@ -24,7 +23,12 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     string? key = null;
     var buffer = new byte[1];
 
-    while (bracketDepth > 0)
+    var openingBracketStack = new Stack<char>();
+    openingBracketStack.Push(firstChar);
+
+    var escaped = false;
+
+    while (openingBracketStack.Count != 0)
     {
       if (await stream.ReadAsync(buffer) == 0)
         throw new IOException("Unexpected end of stream");
@@ -33,7 +37,18 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
 
       rawBytes.Write(buffer);
 
-      if (bracketDepth == 2)
+
+      if (escaped)
+      {
+        bufferStringBuilder.Append(character);
+        escaped = false;
+        continue;
+      }
+
+      if (character == '\\')
+        escaped = true;
+
+      if (openingBracketStack.Count == 2)
       {
         switch (character)
         {
@@ -62,15 +77,15 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
 
       switch (character)
       {
-        case '<' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
-        case '[' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
-        case '(' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
-          bracketDepth++;
+        case '<' when openingBracketStack.Peek() != '(':
+        case '[' when openingBracketStack.Peek() != '(':
+        case '(':
+          openingBracketStack.Push(character);
           break;
-        case '>' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
-        case ']' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
-        case ')' when bufferStringBuilder.Length == 0 || bufferStringBuilder[^1] != '\\':
-          bracketDepth--;
+        case '>' when openingBracketStack.Peek() == '<':
+        case ']' when openingBracketStack.Peek() == '[':
+        case ')' when openingBracketStack.Peek() == '(':
+          openingBracketStack.Pop();
           break;
       }
 
