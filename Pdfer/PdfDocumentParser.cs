@@ -32,7 +32,7 @@ public class PdfDocumentParser(
     var xrefTable = await GetXrefTable(streamReader, trailer.XRefByteOffset);
     var body = await GetBody(stream, xrefTable, trailer);
 
-    return new PdfDocument(header, body, xrefTable, trailer);
+    return new PdfDocument(header, [new PdfDocumentPart(body, xrefTable, trailer)]);
   }
 
   // TODO (lena): Operate on Stream

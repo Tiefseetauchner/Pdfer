@@ -22,17 +22,20 @@ public class PdfDocumentWriter(
     if (!stream.CanWrite)
       throw new ArgumentException("Stream is not writable", nameof(stream));
 
-    WriteHeader(stream, pdfDocument.Header);
-    var xRefTable = await WriteBody(stream, pdfDocument.Body);
-    var xRefTableOffset = WriteXrefTable(stream, xRefTable);
-    await WriteTrailer(stream, pdfDocument.Trailer, xRefTableOffset);
+    WriteHeader(stream, pdfDocument.PdfHeader);
+    foreach (var pdfDocumentPart in pdfDocument.DocumentParts)
+    {
+      var xRefTable = await WriteBody(stream, pdfDocumentPart.Body);
+      var xRefTableOffset = WriteXrefTable(stream, xRefTable);
+      await WriteTrailer(stream, pdfDocumentPart.Trailer, xRefTableOffset);
+    }
   }
 
   private void WriteHeader(Stream stream, Header pdfDocumentHeader)
   {
     stream.Write("%PDF-"u8);
 
-    stream.Write(pdfDocumentHeader.Version switch
+    stream.Write(pdfDocumentHeader.PdfVersion switch
     {
       PdfVersion.Pdf10 => "1.0"u8,
       PdfVersion.Pdf11 => "1.1"u8,
@@ -42,7 +45,7 @@ public class PdfDocumentWriter(
       PdfVersion.Pdf15 => "1.5"u8,
       PdfVersion.Pdf16 => "1.6"u8,
       PdfVersion.Pdf17 => "1.7"u8,
-      _ => throw new InvalidOperationException($"Invalid version number '{pdfDocumentHeader.Version}'")
+      _ => throw new InvalidOperationException($"Invalid version number '{pdfDocumentHeader.PdfVersion}'")
     });
 
     stream.Write("\n"u8);

@@ -1,14 +1,11 @@
+﻿using System.Collections.Generic;
+
 namespace Pdfer;
 
 public class PdfDocument(
-  Header header,
-  Body body,
-  XRefTable xRefTable,
-  Trailer trailer)
+  Header pdfHeader,
+  List<PdfDocumentPart> documentParts)
 {
-  public PdfVersion PdfVersion => Header.Version;
-  public Header Header => header;
-  public Body Body => body;
-  public XRefTable XRefTable => xRefTable;
-  public Trailer Trailer => trailer;
+  public Header PdfHeader => pdfHeader;
+  public List<PdfDocumentPart> DocumentParts => documentParts;
 }

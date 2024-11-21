@@ -14,17 +14,16 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     using var rawBytes = new MemoryStream();
 
     var bufferStringBuilder = new StringBuilder();
+    var openingBracketStack = new Stack<char>();
 
     var firstChar = streamHelper.ReadChar(stream);
     bufferStringBuilder.Append(firstChar);
+    openingBracketStack.Push(firstChar);
     rawBytes.WriteByte((byte)firstChar);
 
     var keyReading = false;
     string? key = null;
     var buffer = new byte[1];
-
-    var openingBracketStack = new Stack<char>();
-    openingBracketStack.Push(firstChar);
 
     var escaped = false;
 

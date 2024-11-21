@@ -1,5 +1,5 @@
 namespace Pdfer;
 
 public record Header(
-  PdfVersion Version,
+  PdfVersion PdfVersion,
   bool ContainsBinaryDataHeader);
