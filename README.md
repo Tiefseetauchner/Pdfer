@@ -55,7 +55,7 @@ writer.Write(stream, document);
 
 ## Known Issues
 
-- The parser doesn't currently support multilayer PDFs.
+- ~~The parser doesn't currently support multilayer PDFs.~~
 - Things like signed PDFs with multiple trailers don't work.
 - Writing PDFs currently only really works for extraordinarily simple **and conform** PDFs.
 - Pdfs with `\r\n` delimiters are not supported
