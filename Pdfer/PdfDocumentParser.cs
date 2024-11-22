@@ -1,17 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Pdfer.Objects;
 
 namespace Pdfer;
 
-public class PdfDocumentParser(
-  IStreamHelper streamHelper,
-  IPdfDictionaryHelper pdfDictionaryHelper,
-  IPdfObjectReader pdfObjectReader)
+public class PdfDocumentParser(PdfDocumentPartParser pdfDocumentPartParser)
 {
   private const int HeaderLengthInBytes = 8;
   private const string HeaderBytes = "%PDF-";
@@ -25,14 +20,11 @@ public class PdfDocumentParser(
 
   public async Task<PdfDocument> Parse(Stream stream)
   {
-    using var streamReader = new StreamReader(stream);
-
     var header = await GetHeader(stream);
-    var trailer = await GetTrailer(stream, streamReader);
-    var xrefTable = await GetXrefTable(streamReader, trailer.XRefByteOffset);
-    var body = await GetBody(stream, xrefTable, trailer);
 
-    return new PdfDocument(header, [new PdfDocumentPart(body, xrefTable, trailer)]);
+    var parts = await pdfDocumentPartParser.Parse(stream);
+
+    return new PdfDocument(header, parts);
   }
 
   // TODO (lena): Operate on Stream
@@ -71,150 +63,4 @@ public class PdfDocumentParser(
       '7' => PdfVersion.Pdf17,
       _ => throw new InvalidOperationException($"Invalid version number '{Encoding.UTF8.GetString(buffer[5..])}'")
     };
-
-  private async Task<Trailer> GetTrailer(Stream stream, StreamReader streamReader)
-  {
-    await using var reverseStream = new ReverseStream(stream);
-    reverseStream.Position = 0;
-    using var reverseStreamReader = new StreamReader(reverseStream);
-
-    await VerifyEofExists(reverseStreamReader);
-
-    var xrefOffset = await GetXrefOffset(reverseStreamReader);
-
-    await VerifyStartxrefExists(reverseStreamReader);
-
-    var trailerDictionary = await GetTrailerDictionary(reverseStream, stream, streamReader);
-
-    if (trailerDictionary.TryGetValue("/Prev", out var value))
-      xrefOffset = long.Parse(value);
-
-    return new Trailer(trailerDictionary, xrefOffset);
-  }
-
-  private async Task VerifyEofExists(StreamReader streamReader)
-  {
-    var eofFound = false;
-    while (!eofFound)
-    {
-      var line = await streamHelper.ReadReverseLine(streamReader);
-
-      if (string.IsNullOrWhiteSpace(line))
-        continue;
-
-      if (line != "%%EOF")
-        throw new InvalidOperationException("No EOF found");
-
-      eofFound = true;
-    }
-  }
-
-  private async Task<long> GetXrefOffset(StreamReader streamReader)
-  {
-    var xrefOffsetString = await streamHelper.ReadReverseLine(streamReader);
-    var xrefOffsetParsed = long.TryParse(xrefOffsetString, out var xrefOffset);
-    if (!xrefOffsetParsed)
-      throw new InvalidOperationException("xref offset is not a number");
-    return xrefOffset;
-  }
-
-  private async Task VerifyStartxrefExists(StreamReader streamReader)
-  {
-    var startXref = await streamHelper.ReadReverseLine(streamReader);
-
-    if (startXref != "startxref")
-      throw new InvalidOperationException("No 'startxref' keyword found");
-  }
-
-  private async Task<Dictionary<string, string>> GetTrailerDictionary(Stream reverseStream, Stream stream, StreamReader streamReader)
-  {
-    reverseStream.Position = 0;
-
-    var buffer = new byte[7];
-    var bytesRead = await reverseStream.ReadAsync(buffer);
-    while (bytesRead == 7 && !buffer.Reverse().SequenceEqual("trailer".ToCharArray().Select(_ => (byte)_)))
-    {
-      reverseStream.Position -= 6;
-      bytesRead = await reverseStream.ReadAsync(buffer);
-    }
-
-    if (bytesRead != 7)
-      throw new InvalidOperationException("No 'trailer' keyword found");
-
-    await streamHelper.ReadStreamTo("\n", stream);
-
-    return (await pdfDictionaryHelper.ReadDictionary(stream)).dictionary;
-  }
-
-
-  private async Task<XRefTable> GetXrefTable(StreamReader streamReader, long xrefOffset)
-  {
-    streamReader.BaseStream.Seek(xrefOffset, SeekOrigin.Begin);
-    streamReader.DiscardBufferedData();
-
-    var xRefTable = new XRefTable();
-    var line = await streamReader.ReadLineAsync();
-
-    if (line != "xref")
-      throw new InvalidOperationException("No 'xref' keyword found");
-
-    while ((line = await streamReader.ReadLineAsync()) != null && line != "trailer")
-    {
-      var (objectNumber, objectsInSection) = ParseSubsectionHeader(line);
-
-      await AddXRefEntriesInSubsection(objectsInSection, streamReader, objectNumber, xRefTable);
-    }
-
-    return xRefTable;
-  }
-
-  private (int ObjectNumber, int RemainingInSection) ParseSubsectionHeader(string line)
-  {
-    var subsectionHeaderParts = line.Split(' ');
-    return (int.Parse(subsectionHeaderParts[0]), int.Parse(subsectionHeaderParts[1]));
-  }
-
-  private async Task AddXRefEntriesInSubsection(int objectsInSection, StreamReader streamReader, int objectNumber, XRefTable xRefTable)
-  {
-    for (var i = 0; i < objectsInSection; i++)
-    {
-      var line = await streamReader.ReadLineAsync();
-
-      if (string.IsNullOrWhiteSpace(line))
-        throw new IOException("Unexpected end of stream");
-
-      var (objectIdentifier, xRefEntry) = GetXrefEntry(line, objectNumber);
-      xRefTable.Add(objectIdentifier, xRefEntry);
-      objectNumber++;
-    }
-  }
-
-  private (ObjectIdentifier, XRefEntry) GetXrefEntry(string line, int objectNumber)
-  {
-    var objectEntryParts = line.Split(' ');
-    var offset = long.Parse(objectEntryParts[0]);
-    var generationNumber = int.Parse(objectEntryParts[1]);
-    var type = objectEntryParts[2] switch
-    {
-      "f" => XRefEntryType.Free,
-      "n" => XRefEntryType.Used,
-      _ => throw new InvalidOperationException($"Invalid xref entry type '{objectEntryParts[2]}'")
-    };
-    return (new ObjectIdentifier(objectNumber, generationNumber), new XRefEntry(offset, type));
-  }
-
-  private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, Trailer trailer)
-  {
-    var objectRepository = new ObjectRepository(pdfObjectReader, xRefTable);
-
-    var usedXrefEntries = xRefTable
-      .Where(entry => entry.Value.Flag == XRefEntryType.Used);
-
-    foreach (var xRefEntry in usedXrefEntries)
-    {
-      await objectRepository.RetrieveObject<DocumentObject>(xRefEntry.Key, stream);
-    }
-
-    return new Body(objectRepository.Objects);
-  }
 }

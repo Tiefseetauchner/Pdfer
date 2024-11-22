@@ -13,7 +13,8 @@ public class PdfDocumentParserTest
   [SetUp]
   public void Setup()
   {
-    _pdfDocumentParser = new PdfDocumentParserFactory().Create();
+    var pdfDocumentPartParser = new PdfDocumentPartParserFactory().Create();
+    _pdfDocumentParser = new PdfDocumentParser(pdfDocumentPartParser);
   }
 
   [Test]

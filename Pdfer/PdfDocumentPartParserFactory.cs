@@ -2,9 +2,9 @@ using Pdfer.Objects;
 
 namespace Pdfer;
 
-public class PdfDocumentParserFactory : IPdfDocumentParserFactory
+public class PdfDocumentPartParserFactory : IPdfDocumentPartParserFactory
 {
-  public PdfDocumentParser Create()
+  public PdfDocumentPartParser Create()
   {
     var streamHelper = new StreamHelper();
     var pdfDictionaryHelper = new PdfDictionaryHelper(streamHelper);
@@ -22,14 +22,14 @@ public class PdfDocumentParserFactory : IPdfDocumentParserFactory
       new NameObjectReader(),
       new ArrayObjectReader(pdfArrayHelper));
 
-    return new PdfDocumentParser(
+    return new PdfDocumentPartParser(
       streamHelper,
       new PdfDictionaryHelper(streamHelper),
       pdfObjectReader);
   }
 }
 
-public interface IPdfDocumentParserFactory
+public interface IPdfDocumentPartParserFactory
 {
-  PdfDocumentParser Create();
+  PdfDocumentPartParser Create();
 }
