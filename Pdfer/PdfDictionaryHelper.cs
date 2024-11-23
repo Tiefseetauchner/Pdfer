@@ -10,92 +10,102 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
 {
   public async Task<(Dictionary<string, string> dictionary, byte[] bytes)> ReadDictionary(Stream stream)
   {
-    var dictionary = new Dictionary<string, string>();
-    using var rawBytes = new MemoryStream();
+    var state = new PdfDictionaryReaderState();
 
-    var bufferStringBuilder = new StringBuilder();
-    var openingBracketStack = new Stack<char>();
+    HandleFirstCharacter(stream, state);
 
-    var firstChar = streamHelper.ReadChar(stream);
-    bufferStringBuilder.Append(firstChar);
-    openingBracketStack.Push(firstChar);
-    rawBytes.WriteByte((byte)firstChar);
-
-    var keyReading = false;
-    string? key = null;
-    var buffer = new byte[1];
-
-    var escaped = false;
-
-    while (openingBracketStack.Count != 0)
+    while (state.OpeningBracketStack.Count != 0)
     {
-      if (await stream.ReadAsync(buffer) == 0)
+      if (await stream.ReadAsync(state.Buffer) == 0)
         throw new IOException("Unexpected end of stream");
 
-      var character = (char)buffer[0];
+      var character = (char)state.Buffer[0];
 
-      rawBytes.Write(buffer);
+      state.RawBytes.Write(state.Buffer);
 
-
-      if (escaped)
-      {
-        bufferStringBuilder.Append(character);
-        escaped = false;
+      if (HandleEscapeCharacter(state, character))
         continue;
-      }
 
-      if (character == '\\')
-        escaped = true;
-
-      if (openingBracketStack.Count == 2)
+      if (state.OpeningBracketStack.Count == 2)
       {
-        switch (character)
-        {
-          case '/' when !keyReading && (!string.IsNullOrWhiteSpace(bufferStringBuilder.ToString()) || key == null):
-            keyReading = true;
-
-            if (key != null)
-              AddDictionaryEntry(dictionary, key, bufferStringBuilder.ToString());
-
-            bufferStringBuilder = new StringBuilder();
-            break;
-          case '/' when keyReading:
-          case ' ' when keyReading:
-          case '\n' when keyReading:
-          case '\r' when keyReading:
-          case '[' when keyReading:
-          case '(' when keyReading:
-          case '<' when keyReading:
-          case '>' when keyReading:
-            keyReading = false;
-            key = bufferStringBuilder.ToString().Trim();
-            bufferStringBuilder = new StringBuilder();
-            break;
-        }
+        HandleCharacter(character, state);
       }
 
-      switch (character)
-      {
-        case '<' when openingBracketStack.Peek() != '(':
-        case '[' when openingBracketStack.Peek() != '(':
-        case '(':
-          openingBracketStack.Push(character);
-          break;
-        case '>' when openingBracketStack.Peek() == '<':
-        case ']' when openingBracketStack.Peek() == '[':
-        case ')' when openingBracketStack.Peek() == '(':
-          openingBracketStack.Pop();
-          break;
-      }
+      HandleBrackets(character, state);
 
-      bufferStringBuilder.Append(character);
+      state.BufferStringBuilder.Append(character);
     }
 
+    if (state.Key != null)
+      AddDictionaryEntry(state.Dictionary, state.Key, state.BufferStringBuilder.ToString()[..^2]);
 
-    if (key != null)
-      AddDictionaryEntry(dictionary, key, bufferStringBuilder.ToString()[..^2]);
+    return (state.Dictionary, state.RawBytes.ToArray());
+  }
 
-    return (dictionary, rawBytes.ToArray());
+  private static void HandleBrackets(char character, PdfDictionaryReaderState state)
+  {
+    switch (character)
+    {
+      case '<' when state.OpeningBracketStack.Peek() != '(':
+      case '[' when state.OpeningBracketStack.Peek() != '(':
+      case '(':
+        state.OpeningBracketStack.Push(character);
+        break;
+      case '>' when state.OpeningBracketStack.Peek() == '<':
+      case ']' when state.OpeningBracketStack.Peek() == '[':
+      case ')' when state.OpeningBracketStack.Peek() == '(':
+        state.OpeningBracketStack.Pop();
+        break;
+    }
+  }
+
+  private static void HandleCharacter(char character, PdfDictionaryReaderState state)
+  {
+    switch (character)
+    {
+      case '/' when !state.KeyReading && (!string.IsNullOrWhiteSpace(state.BufferStringBuilder.ToString()) || state.Key == null):
+        state.KeyReading = true;
+
+        if (state.Key != null)
+          AddDictionaryEntry(state.Dictionary, state.Key, state.BufferStringBuilder.ToString());
+
+        state.BufferStringBuilder.Clear();
+        break;
+      case '/' when state.KeyReading:
+      case ' ' when state.KeyReading:
+      case '\n' when state.KeyReading:
+      case '\r' when state.KeyReading:
+      case '[' when state.KeyReading:
+      case '(' when state.KeyReading:
+      case '<' when state.KeyReading:
+      case '>' when state.KeyReading:
+        state.KeyReading = false;
+        state.Key = state.BufferStringBuilder.ToString().Trim();
+        state.BufferStringBuilder.Clear();
+        break;
+    }
+  }
+
+  private static bool HandleEscapeCharacter(PdfDictionaryReaderState state, char character)
+  {
+    if (state.Escaped)
+    {
+      state.BufferStringBuilder.Append(character);
+      state.Escaped = false;
+      return true;
+    }
+
+    if (character == '\\')
+      state.Escaped = true;
+    return false;
+  }
+
+  private void HandleFirstCharacter(Stream stream, PdfDictionaryReaderState state)
+  {
+    var firstChar = streamHelper.ReadChar(stream);
+    state.BufferStringBuilder.Append(firstChar);
+    state.OpeningBracketStack.Push(firstChar);
+    state.RawBytes.WriteByte((byte)firstChar);
   }
 
   private static void AddDictionaryEntry(Dictionary<string, string> dictionary, string arrayKey, string bufferString)
@@ -105,7 +115,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     if (bufferString.Trim().Length == 0)
       throw new InvalidOperationException($"Empty value for key '{arrayKey}' in dictionary");
 
-    dictionary[arrayKey] = bufferString.ToString().Trim();
+    dictionary[arrayKey] = bufferString.Trim();
   }
 
   public async Task<byte[]> GetDictionaryBytes(Dictionary<string, string> dictionary)
