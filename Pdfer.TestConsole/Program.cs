@@ -15,7 +15,7 @@ class Program
 
     var infoReference = ObjectIdentifier.ParseReference(pdfDocument.DocumentParts[0].Trailer.TrailerDictionary["/Info"]);
     var infoDictionary = pdfDocument.DocumentParts[0].Body[infoReference] as DictionaryObject ?? throw new InvalidOperationException("Info dictionary not found");
-    infoDictionary.Value["/Producer"] = PdfStringHelper.AsHexString("PDFer");
+    infoDictionary.Value["/Producer"] = new StringObject(PdfStringHelper.AsHexString("PDFer"), []);
     infoDictionary.Value["/Title"] = PdfStringHelper.AsHexString("My PDFer Specification!!!");
 
     await using var outputStream = File.OpenWrite(args[1]);

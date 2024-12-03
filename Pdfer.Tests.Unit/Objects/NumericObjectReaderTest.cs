@@ -5,14 +5,14 @@ using Pdfer.Objects;
 
 namespace Pdfer.Tests.Unit.Objects;
 
-public class NumberObjectReaderTest
+public class NumericObjectReaderTest
 {
-  private NumberObjectReader _objectReader;
+  private NumericObjectReader _objectReader;
 
   [SetUp]
   public void SetUp()
   {
-    _objectReader = new NumberObjectReader(new StreamHelper());
+    _objectReader = new NumericObjectReader(new StreamHelper());
   }
 
   [Test]

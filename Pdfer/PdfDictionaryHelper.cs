@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Pdfer.Objects;
 
 namespace Pdfer;
 
 public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHelper
 {
-  public async Task<(Dictionary<string, string> dictionary, byte[] bytes)> ReadDictionary(Stream stream)
+  public async Task<(Dictionary<string, DocumentObject> dictionary, byte[] bytes)> ReadDictionary(Stream stream)
   {
     var state = new PdfDictionaryReaderState();
 
@@ -108,7 +109,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     state.RawBytes.WriteByte((byte)firstChar);
   }
 
-  private static void AddDictionaryEntry(Dictionary<string, string> dictionary, string arrayKey, string bufferString)
+  private static void AddDictionaryEntry(Dictionary<string, DocumentObject> dictionary, string arrayKey, string bufferString)
   {
     if (dictionary.ContainsKey(arrayKey))
       throw new InvalidOperationException($"Duplicate key '{arrayKey}' in dictionary");
@@ -118,14 +119,14 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     dictionary[arrayKey] = bufferString.Trim();
   }
 
-  public async Task<byte[]> GetDictionaryBytes(Dictionary<string, string> dictionary)
+  public async Task<byte[]> GetDictionaryBytes(Dictionary<string, DocumentObject> dictionary)
   {
     using var memoryStream = new MemoryStream();
     await WriteDictionary(memoryStream, dictionary);
     return memoryStream.ToArray();
   }
 
-  public async Task WriteDictionary(Stream stream, Dictionary<string, string> dictionary)
+  public async Task WriteDictionary(Stream stream, Dictionary<string, DocumentObject> dictionary)
   {
     await stream.WriteAsync("<<"u8.ToArray());
 
@@ -134,6 +135,7 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
       await stream.WriteAsync("\n"u8.ToArray());
       await stream.WriteAsync(Encoding.UTF8.GetBytes(key));
       await stream.WriteAsync(" "u8.ToArray());
+      // TODO (lena.tauchner): DocumentObjectWriter
       await stream.WriteAsync(Encoding.UTF8.GetBytes(value));
     }
 

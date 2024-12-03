@@ -29,8 +29,19 @@ public class PdfDocumentPartParser(
 
       if (trailerDictionary.TryGetValue("/Prev", out var prevXRefOffset))
       {
-        hasNextPart = prevXRefOffset != "0";
-        currentXrefOffset = long.Parse(prevXRefOffset);
+        switch (prevXRefOffset)
+        {
+          case IntegerObject integerObjectOffset:
+            hasNextPart = integerObjectOffset.Value != 0;
+            currentXrefOffset = integerObjectOffset.Value;
+            break;
+          case IndirectObject { Value: IntegerObject integerObjectOffset }:
+            hasNextPart = integerObjectOffset.Value != 0;
+            currentXrefOffset = integerObjectOffset.Value;
+            break;
+          default:
+            throw new InvalidOperationException($"Key '/Prev' of trailer dictionary was of type {prevXRefOffset.GetType()} but expected {typeof(IntegerObject)}.");
+        }
       }
       else
       {
@@ -152,7 +163,7 @@ public class PdfDocumentPartParser(
     return (new ObjectIdentifier(objectNumber, generationNumber), new XRefEntry(offset, type));
   }
 
-  private async Task<Dictionary<string, string>> GetTrailerDictionary(Stream stream)
+  private async Task<Dictionary<string, DocumentObject>> GetTrailerDictionary(Stream stream)
   {
     await streamHelper.ReadStreamTo("trailer", stream);
     await streamHelper.ReadStreamTo("\n", stream);
@@ -162,7 +173,7 @@ public class PdfDocumentPartParser(
 
   private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, Trailer trailer)
   {
-    var objectRepository = new ObjectRepository(pdfObjectReader, xRefTable);
+    var objectRepository = new ObjectRepository(pdfObjectReader);
 
     var usedXrefEntries = xRefTable
       .Where(entry => entry.Value.Flag == XRefEntryType.Used);

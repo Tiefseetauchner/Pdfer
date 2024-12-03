@@ -11,7 +11,7 @@ public class PdfDocumentWriterFactory
     var pdfArrayHelper = new PdfArrayHelper(streamHelper);
     return new PdfDocumentWriter(pdfDictionaryHelper,
       new DictionaryObjectSerializer(pdfDictionaryHelper),
-      new NumberObjectSerializer(),
+      new NumericObjectSerializer(),
       new StreamObjectSerializer(pdfDictionaryHelper),
       new StringObjectSerializer(),
       new NameObjectSerializer(),

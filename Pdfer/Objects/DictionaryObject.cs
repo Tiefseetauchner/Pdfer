@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Pdfer.Objects;
 
-public class DictionaryObject(Dictionary<string, string> value, byte[] rawValue, ObjectIdentifier objectIdentifier) : DocumentObject(rawValue, objectIdentifier)
+public class DictionaryObject(Dictionary<string, DocumentObject> value) : DocumentObject
 {
-  public Dictionary<string, string> Value => value;
+  public Dictionary<string, DocumentObject> Value => value;
 }

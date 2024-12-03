@@ -1,6 +1,6 @@
 namespace Pdfer.Objects;
 
-public class IntegerObject(long value, byte[] rawValue, ObjectIdentifier objectIdentifier) : NumberObject(rawValue, objectIdentifier)
+public class IntegerObject(long value) : NumericObject()
 {
   public long Value => value;
 }

@@ -7,8 +7,6 @@ public class ArrayObjectSerializer(IPdfArrayHelper pdfArrayHelper) : IDocumentOb
 {
   public async Task Serialize(Stream stream, ArrayObject documentObject)
   {
-    await stream.WriteAsync(documentObject.ObjectIdentifier.GetHeaderBytes());
     await pdfArrayHelper.WriteArray(stream, documentObject.Value);
-    await stream.WriteAsync("\nendobj"u8.ToArray());
   }
 }

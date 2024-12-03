@@ -3,21 +3,12 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class DictionaryObjectReader(IStreamHelper streamHelper, IPdfDictionaryHelper pdfDictionaryHelper) : IDocumentObjectReader<DictionaryObject>
+public class DictionaryObjectReader(IPdfDictionaryHelper pdfDictionaryHelper) : IDocumentObjectReader<DictionaryObject>
 {
-  public async Task<DictionaryObject> Read(Stream stream, IObjectRepository objectRepository, ObjectIdentifier objectIdentifier)
+  public async Task<DictionaryObject> Read(Stream stream, IObjectRepository objectRepository)
   {
-    using var rawData = new MemoryStream();
+    var dictionary = await pdfDictionaryHelper.ReadDictionary(stream, objectRepository);
 
-    rawData.Write(objectIdentifier.GetHeaderBytes());
-
-    var (dictionary, dictionaryBytes) = await pdfDictionaryHelper.ReadDictionary(stream);
-    rawData.Write(dictionaryBytes);
-
-    rawData.Write(await streamHelper.ReadStreamTo("endobj", stream));
-
-    rawData.Write("endobj"u8.ToArray());
-
-    return new DictionaryObject(dictionary, rawData.ToArray(), objectIdentifier);
+    return new DictionaryObject(dictionary);
   }
 }

@@ -11,7 +11,7 @@ namespace Pdfer;
 public class PdfDocumentWriter(
   IPdfDictionaryHelper pdfDictionaryHelper,
   IDocumentObjectSerializer<DictionaryObject> dictionaryObjectSerializer,
-  IDocumentObjectSerializer<NumberObject> numberObjectSerializer,
+  IDocumentObjectSerializer<NumericObject> numberObjectSerializer,
   IDocumentObjectSerializer<StreamObject> streamObjectSerializer,
   IDocumentObjectSerializer<StringObject> stringObjectSerializer,
   IDocumentObjectSerializer<NameObject> nameObjectSerializer,
@@ -82,7 +82,7 @@ public class PdfDocumentWriter(
       case DictionaryObject dictionaryObject:
         await dictionaryObjectSerializer.Serialize(stream, dictionaryObject);
         break;
-      case NumberObject numberObject:
+      case NumericObject numberObject:
         await numberObjectSerializer.Serialize(stream, numberObject);
         break;
       case StreamObject streamObject:

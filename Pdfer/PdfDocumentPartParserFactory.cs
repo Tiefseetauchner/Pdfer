@@ -9,16 +9,15 @@ public class PdfDocumentPartParserFactory : IPdfDocumentPartParserFactory
     var streamHelper = new StreamHelper();
     var pdfDictionaryHelper = new PdfDictionaryHelper(streamHelper);
     var pdfArrayHelper = new PdfArrayHelper(streamHelper);
+    var dictionaryObjectReader = new DictionaryObjectReader(pdfDictionaryHelper);
 
     var pdfObjectReader = new PdfObjectReader(
       pdfDictionaryHelper,
       streamHelper,
-      new DictionaryObjectReader(
-        streamHelper,
-        pdfDictionaryHelper),
+      dictionaryObjectReader,
       new StringObjectReader(),
-      new StreamObjectReader(pdfDictionaryHelper, streamHelper),
-      new NumberObjectReader(streamHelper),
+      new StreamObjectReader(dictionaryObjectReader, streamHelper),
+      new NumericObjectReader(),
       new NameObjectReader(),
       new ArrayObjectReader(pdfArrayHelper));
 

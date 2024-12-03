@@ -1,6 +1,7 @@
 namespace Pdfer.Objects;
 
-public class StringObject(string value, byte[] rawValue, ObjectIdentifier objectIdentifier) : DocumentObject(rawValue, objectIdentifier)
+// TODO (lena.tauchner): Differentiate between Hex and literal string
+public class StringObject(string value) : DocumentObject
 {
   public string Value => value;
 }

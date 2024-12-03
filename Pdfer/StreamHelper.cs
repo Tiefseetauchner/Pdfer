@@ -32,6 +32,14 @@ public class StreamHelper : IStreamHelper
   public char ReadChar(Stream stream) =>
     (char)stream.ReadByte();
 
+  public char PeakChar(Stream stream)
+  {
+    var oldPosition = stream.Position;
+    var character = (char)stream.ReadByte();
+    stream.Position = oldPosition;
+    return character;
+  }
+
   public async Task<byte[]> SkipWhiteSpaceCharacters(Stream stream)
   {
     using var rawBytes = new MemoryStream();

@@ -5,17 +5,10 @@ namespace Pdfer.Objects;
 
 public class ArrayObjectReader(IPdfArrayHelper pdfArrayHelper) : IDocumentObjectReader<ArrayObject>
 {
-  public async Task<ArrayObject> Read(Stream stream, IObjectRepository objectRepository, ObjectIdentifier objectIdentifier)
+  public async Task<ArrayObject> Read(Stream stream, IObjectRepository objectRepository)
   {
-    var rawData = new MemoryStream();
-    rawData.Write(objectIdentifier.GetHeaderBytes());
+    var array = await pdfArrayHelper.ReadArray(stream, objectRepository);
 
-    var (array, rawArrayBytes) = await pdfArrayHelper.ReadArray(stream);
-
-    rawData.Write(rawArrayBytes);
-
-    rawData.Write("\nendobj"u8.ToArray());
-
-    return new ArrayObject(array, rawData.ToArray(), objectIdentifier);
+    return new ArrayObject(array);
   }
 }

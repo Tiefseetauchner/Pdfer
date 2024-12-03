@@ -5,12 +5,10 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class NumberObjectSerializer() : IDocumentObjectSerializer<NumberObject>
+public class NumericObjectSerializer() : IDocumentObjectSerializer<NumericObject>
 {
-  public async Task Serialize(Stream stream, NumberObject documentObject)
+  public async Task Serialize(Stream stream, NumericObject documentObject)
   {
-    await stream.WriteAsync(documentObject.ObjectIdentifier.GetHeaderBytes());
-
     switch (documentObject)
     {
       case FloatObject floatObject:
@@ -20,7 +18,5 @@ public class NumberObjectSerializer() : IDocumentObjectSerializer<NumberObject>
         await stream.WriteAsync(Encoding.UTF8.GetBytes(integerObject.Value.ToString()));
         break;
     }
-
-    await stream.WriteAsync("\nendobj"u8.ToArray());
   }
 }

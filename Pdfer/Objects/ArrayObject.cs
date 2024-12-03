@@ -1,6 +1,6 @@
 namespace Pdfer.Objects;
 
-public class ArrayObject(string[] value, byte[] rawValue, ObjectIdentifier objectIdentifier) : DocumentObject(rawValue, objectIdentifier)
+public class ArrayObject(DocumentObject[] value) : DocumentObject
 {
-  public string[] Value => value;
+  public DocumentObject[] Value => value;
 }
