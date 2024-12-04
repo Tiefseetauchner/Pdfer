@@ -168,7 +168,7 @@ public class PdfDocumentPartParser(
     await streamHelper.ReadStreamTo("trailer", stream);
     await streamHelper.ReadStreamTo("\n", stream);
 
-    return (await pdfDictionaryHelper.ReadDictionary(stream)).dictionary;
+    return await pdfDictionaryHelper.ReadDictionary(stream);
   }
 
   private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, Trailer trailer)

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 namespace Pdfer.Objects;
 
 public class PdfObjectReader(
-  IPdfDictionaryHelper pdfDictionaryHelper,
   IStreamHelper streamHelper,
   IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
   IDocumentObjectReader<StringObject> stringObjectReader,
@@ -17,7 +16,7 @@ public class PdfObjectReader(
 {
   // TODO (lena): Deal with BooleanObjects
   // TODO (lena): Deal with NullObjects
-  public async Task<DocumentObject> Read(Stream stream, IObjectRepository objectRepository)
+  public async Task<DocumentObject> Read(Stream stream)
   {
     var objectStartBuffer = new byte[2];
     var objectStart = await stream.ReadAsync(objectStartBuffer);
@@ -30,16 +29,16 @@ public class PdfObjectReader(
     if (objectStartBuffer[0] == '<' &&
         objectStartBuffer[1] != '<' ||
         objectStartBuffer[0] == '(')
-      return await stringObjectReader.Read(stream, objectRepository);
+      return await stringObjectReader.Read(stream);
 
     if (objectStartBuffer[0] == '[')
-      return await arrayObjectReader.Read(stream, objectRepository);
+      return await arrayObjectReader.Read(stream);
 
     if (objectStartBuffer[0] == '<' &&
         objectStartBuffer[1] == '<')
     {
       // IMPROVE (lena): This is not a good way to check if it is a stream. We're reading the whole dictionary twice.
-      await pdfDictionaryHelper.ReadDictionary(stream, objectRepository);
+      await new PdfDictionaryHelper(streamHelper, this).ReadDictionary(stream);
 
       await streamHelper.SkipWhiteSpaceCharacters(stream);
 
@@ -49,16 +48,16 @@ public class PdfObjectReader(
       stream.Position = streamPositionAfterObjectStart;
 
       if (contentAfterDictionary.Trim().StartsWith("stream"))
-        return await streamObjectReader.Read(stream, objectRepository);
+        return await streamObjectReader.Read(stream);
 
-      return await dictionaryObjectReader.Read(stream, objectRepository);
+      return await dictionaryObjectReader.Read(stream);
     }
 
     if (char.IsNumber((char)objectStartBuffer[0]))
-      return await numberObjectReader.Read(stream, objectRepository);
+      return await numberObjectReader.Read(stream);
 
     if ((char)objectStartBuffer[0] == '/')
-      return await nameObjectReader.Read(stream, objectRepository);
+      return await nameObjectReader.Read(stream);
 
     throw new NotImplementedException("The object type passed was not yet implemented");
   }

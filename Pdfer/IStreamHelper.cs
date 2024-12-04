@@ -9,5 +9,6 @@ public interface IStreamHelper
   Task<byte[]> ReadStreamTo(string s, Stream stream);
   char ReadChar(Stream stream);
   char PeakChar(Stream stream);
+  Task<int> Peak(Stream stream, byte[] buffer);
   Task<byte[]> SkipWhiteSpaceCharacters(Stream stream);
 }

@@ -9,6 +9,7 @@ public class PdfDocumentWriterFactory
     var streamHelper = new StreamHelper();
     var pdfDictionaryHelper = new PdfDictionaryHelper(streamHelper);
     var pdfArrayHelper = new PdfArrayHelper(streamHelper);
+    
     return new PdfDocumentWriter(pdfDictionaryHelper,
       new DictionaryObjectSerializer(pdfDictionaryHelper),
       new NumericObjectSerializer(),

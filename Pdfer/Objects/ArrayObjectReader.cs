@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class ArrayObjectReader(IPdfArrayHelper pdfArrayHelper) : IDocumentObjectReader<ArrayObject>
+public class ArrayObjectReader(StreamHelper streamHelper) : IDocumentObjectReader<ArrayObject>
 {
-  public async Task<ArrayObject> Read(Stream stream, IObjectRepository objectRepository)
+  public async Task<ArrayObject> Read(Stream stream)
   {
-    var array = await pdfArrayHelper.ReadArray(stream, objectRepository);
+    var array = await new PdfArrayHelper(streamHelper).ReadArray(stream);
 
     return new ArrayObject(array);
   }

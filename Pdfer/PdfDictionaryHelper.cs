@@ -7,40 +7,26 @@ using Pdfer.Objects;
 
 namespace Pdfer;
 
-public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHelper
+public class PdfDictionaryHelper(
+  IStreamHelper streamHelper,
+  IPdfObjectReader pdfObjectReader) : IPdfDictionaryHelper
 {
-  public async Task<(Dictionary<string, DocumentObject> dictionary, byte[] bytes)> ReadDictionary(Stream stream)
+  public async Task<Dictionary<string, DocumentObject>> ReadDictionary(Stream stream)
   {
-    var state = new PdfDictionaryReaderState();
+    var buffer = new byte[2];
+    NameObject? key = null;
+    DocumentObject? value = null;
 
-    HandleFirstCharacter(stream, state);
-
-    while (state.OpeningBracketStack.Count != 0)
+    while (await streamHelper.Peak(stream, buffer) != 2 && buffer[0] == '>' && buffer[1] == '>')
     {
-      if (await stream.ReadAsync(state.Buffer) == 0)
-        throw new IOException("Unexpected end of stream");
-
-      var character = (char)state.Buffer[0];
-
-      state.RawBytes.Write(state.Buffer);
-
-      if (HandleEscapeCharacter(state, character))
-        continue;
-
-      if (state.OpeningBracketStack.Count == 2)
-      {
-        HandleCharacter(character, state);
-      }
-
-      HandleBrackets(character, state);
-
-      state.BufferStringBuilder.Append(character);
+      if (key == null)
+        key = pdfObjectReader.Read(stream,)
     }
 
     if (state.Key != null)
       AddDictionaryEntry(state.Dictionary, state.Key, state.BufferStringBuilder.ToString()[..^2]);
 
-    return (state.Dictionary, state.RawBytes.ToArray());
+    return state.Dictionary;
   }
 
   private static void HandleBrackets(char character, PdfDictionaryReaderState state)
@@ -99,14 +85,6 @@ public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHel
     if (character == '\\')
       state.Escaped = true;
     return false;
-  }
-
-  private void HandleFirstCharacter(Stream stream, PdfDictionaryReaderState state)
-  {
-    var firstChar = streamHelper.ReadChar(stream);
-    state.BufferStringBuilder.Append(firstChar);
-    state.OpeningBracketStack.Push(firstChar);
-    state.RawBytes.WriteByte((byte)firstChar);
   }
 
   private static void AddDictionaryEntry(Dictionary<string, DocumentObject> dictionary, string arrayKey, string bufferString)

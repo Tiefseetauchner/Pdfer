@@ -8,7 +8,7 @@ namespace Pdfer;
 
 public class PdfArrayHelper(IStreamHelper streamHelper) : IPdfArrayHelper
 {
-  public async Task<DocumentObject[]> ReadArray(Stream stream, IObjectRepository objectRepository)
+  public async Task<DocumentObject[]> ReadArray(Stream stream)
   {
     var objects = new List<DocumentObject>();
 
@@ -20,7 +20,7 @@ public class PdfArrayHelper(IStreamHelper streamHelper) : IPdfArrayHelper
     while (streamHelper.PeakChar(stream) != ']')
     {
       await streamHelper.SkipWhiteSpaceCharacters(stream);
-      objects.Add(await pdfObjectReader.Read(stream, objectRepository));
+      objects.Add(await pdfObjectReader.Read(stream));
       await streamHelper.SkipWhiteSpaceCharacters(stream);
     }
 

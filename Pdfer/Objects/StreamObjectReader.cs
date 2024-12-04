@@ -8,9 +8,9 @@ public class StreamObjectReader(
   IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
   IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
 {
-  public async Task<StreamObject> Read(Stream stream, IObjectRepository objectRepository)
+  public async Task<StreamObject> Read(Stream stream)
   {
-    var dictionary = await dictionaryObjectReader.Read(stream, objectRepository);
+    var dictionary = await dictionaryObjectReader.Read(stream);
 
     var oldPosition = stream.Position;
     var lengthObject = dictionary.Value["/Length"];

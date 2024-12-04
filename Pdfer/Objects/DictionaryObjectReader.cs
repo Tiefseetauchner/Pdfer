@@ -5,9 +5,9 @@ namespace Pdfer.Objects;
 
 public class DictionaryObjectReader(IPdfDictionaryHelper pdfDictionaryHelper) : IDocumentObjectReader<DictionaryObject>
 {
-  public async Task<DictionaryObject> Read(Stream stream, IObjectRepository objectRepository)
+  public async Task<DictionaryObject> Read(Stream stream)
   {
-    var dictionary = await pdfDictionaryHelper.ReadDictionary(stream, objectRepository);
+    var dictionary = await pdfDictionaryHelper.ReadDictionary(stream);
 
     return new DictionaryObject(dictionary);
   }

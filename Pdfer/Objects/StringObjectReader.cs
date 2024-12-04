@@ -6,7 +6,7 @@ namespace Pdfer.Objects;
 
 public class StringObjectReader() : IDocumentObjectReader<StringObject>
 {
-  public async Task<StringObject> Read(Stream stream, IObjectRepository objectRepository)
+  public async Task<StringObject> Read(Stream stream)
   {
     var stringBuilder = new StringBuilder();
 

@@ -6,7 +6,7 @@ namespace Pdfer.Objects;
 
 public class NameObjectReader : IDocumentObjectReader<NameObject>
 {
-  public async Task<NameObject> Read(Stream stream, IObjectRepository objectRepository)
+  public async Task<NameObject> Read(Stream stream)
   {
     var name = new StringBuilder();
     var nextByte = new byte[1];
