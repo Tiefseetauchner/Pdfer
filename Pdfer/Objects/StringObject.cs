@@ -4,4 +4,6 @@ namespace Pdfer.Objects;
 public class StringObject(string value) : DocumentObject
 {
   public string Value => value;
+
+  public override string ToString() => $"{Value}";
 }

@@ -6,18 +6,25 @@ namespace Pdfer.Objects;
 
 public class NumericObjectReader : IDocumentObjectReader<NumericObject>
 {
-  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream) =>
-    await Read(stream);
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+    await Read(stream, objectRepository);
 
-  public async Task<NumericObject> Read(Stream stream)
+  public async Task<NumericObject> Read(Stream stream, ObjectRepository objectRepository)
   {
     var buffer = new byte[1];
     var number = .0f;
     var isDecimal = false;
     var decimalDivider = 1;
+    var isNegative = false;
 
-    while (await stream.ReadAsync(buffer) > 0 && char.IsNumber((char)buffer[0]))
+    while (await stream.ReadAsync(buffer) > 0 && (char.IsNumber((char)buffer[0]) || buffer[0] == '.' || buffer[0] == '-'))
     {
+      if (buffer[0] == '-')
+      {
+        isNegative = true;
+        continue;
+      }
+
       if (buffer[0] == '.')
       {
         if (isDecimal)
@@ -36,6 +43,10 @@ public class NumericObjectReader : IDocumentObjectReader<NumericObject>
     }
 
     number /= decimalDivider;
+
+    number = isNegative ? -number : number;
+
+    stream.Position -= 1;
 
     if (decimalDivider == 1)
       return new IntegerObject((int)number);

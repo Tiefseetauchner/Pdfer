@@ -8,12 +8,12 @@ public class StreamObjectReader(
   IDocumentObjectReader dictionaryObjectReader,
   IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
 {
-  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream) =>
-    await Read(stream);
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+    await Read(stream, objectRepository);
 
-  public async Task<StreamObject> Read(Stream stream)
+  public async Task<StreamObject> Read(Stream stream, ObjectRepository objectRepository)
   {
-    var dictionary = await dictionaryObjectReader.Read(stream);
+    var dictionary = await dictionaryObjectReader.Read(stream, objectRepository);
 
     if (dictionary is not DictionaryObject dictionaryObject)
       throw new InvalidOperationException("Stream did not start with a dictionary object.");
@@ -23,7 +23,8 @@ public class StreamObjectReader(
     var length = lengthObject switch
     {
       IntegerObject integerObject => integerObject.Value,
-      IndirectObject indirectObject => (indirectObject.Value as IntegerObject)?.Value ?? throw new InvalidOperationException($"Key '/Length' of stream object was of type {indirectObject.Value.GetType()} but expected {typeof(IntegerObject)}."),
+      IndirectObject indirectObject => (indirectObject.Value as IntegerObject)?.Value
+                                       ?? throw new InvalidOperationException($"Object referenced by key '/Length' of stream object was of type {indirectObject.Value?.GetType()} but expected {typeof(IntegerObject)}."),
       _ => throw new InvalidOperationException($"Key '/Length' of stream object was of type {lengthObject.GetType()} but expected {typeof(IntegerObject)}.")
     };
     stream.Position = oldPosition;

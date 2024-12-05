@@ -6,4 +6,6 @@ public class StreamObject(
 {
   public DictionaryObject Dictionary => dictionary;
   public byte[] Value => value;
+
+  public override string ToString() => $"stream\n{Value}\nendstream";
 }

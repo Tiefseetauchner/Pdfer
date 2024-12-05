@@ -7,7 +7,7 @@ namespace Pdfer.Objects;
 
 public class IndirectPdfObjectReaderAdapter(IPdfObjectReader adaptee, IStreamHelper streamHelper) : IIndirectPdfObjectReaderAdapter
 {
-  public async Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry)
+  public async Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, ObjectRepository objectRepository)
   {
     stream.Position = xRefEntry.Position;
 
@@ -16,13 +16,8 @@ public class IndirectPdfObjectReaderAdapter(IPdfObjectReader adaptee, IStreamHel
     if (!ObjectIdentifier.TryParseIdentifier(objectIdentifierString, out var objectIdentifier))
       throw new InvalidOperationException("Indirect object did not start with an object identifier.");
 
-    var documentObject = await adaptee.Read(stream);
+    var documentObject = await adaptee.Read(stream, objectRepository);
 
     return new IndirectObject(documentObject, objectIdentifier);
   }
-}
-
-public interface IIndirectPdfObjectReaderAdapter
-{
-  Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry);
 }

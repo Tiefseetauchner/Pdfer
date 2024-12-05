@@ -6,10 +6,10 @@ namespace Pdfer.Objects;
 
 public class NameObjectReader : IDocumentObjectReader<NameObject>
 {
-  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream) =>
-    await Read(stream);
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+    await Read(stream, objectRepository);
 
-  public async Task<NameObject> Read(Stream stream)
+  public async Task<NameObject> Read(Stream stream, ObjectRepository objectRepository)
   {
     var name = new StringBuilder();
     var nextByte = new byte[1];
@@ -23,11 +23,13 @@ public class NameObjectReader : IDocumentObjectReader<NameObject>
     {
       // TODO (lena.tauchner): Decode #XX
 
-      if (nextByte[0] == '/' || nextByte[0] == ' ' || nextByte[0] == '\n' || nextByte[0] == '\r')
+      if (nextByte[0] == '/' || char.IsWhiteSpace((char)nextByte[0]) || nextByte[0] == '(' || nextByte[0] == '[' || nextByte[0] == '<' || nextByte[0] == '>' || nextByte[0] == ')' || nextByte[0] == ']')
         break;
 
       name.Append((char)nextByte[0]);
     }
+
+    stream.Position -= 1;
 
     return new NameObject(name.ToString());
   }

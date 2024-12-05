@@ -23,7 +23,11 @@ public class PdfDocumentPartParser(
     while (hasNextPart)
     {
       var xrefTable = await GetXrefTable(stream, streamReader, currentXrefOffset);
-      var trailerDictionary = await GetTrailerDictionary(stream);
+
+      var objectRepository = new ObjectRepository(pdfObjectReader, xrefTable);
+      var body = await GetBody(stream, xrefTable, objectRepository);
+
+      var trailerDictionary = await GetTrailerDictionary(stream, objectRepository);
 
       var trailer = new Trailer(trailerDictionary, currentXrefOffset);
 
@@ -47,8 +51,6 @@ public class PdfDocumentPartParser(
       {
         hasNextPart = false;
       }
-
-      var body = await GetBody(stream, xrefTable, trailer);
 
       documentParts = documentParts.Prepend(new PdfDocumentPart(body, xrefTable, trailer)).ToList();
     }
@@ -163,24 +165,22 @@ public class PdfDocumentPartParser(
     return (new ObjectIdentifier(objectNumber, generationNumber), new XRefEntry(offset, type));
   }
 
-  private async Task<PdfDictionary> GetTrailerDictionary(Stream stream)
+  private async Task<PdfDictionary> GetTrailerDictionary(Stream stream, ObjectRepository objectRepository)
   {
     await streamHelper.ReadStreamTo("trailer", stream);
     await streamHelper.ReadStreamTo("\n", stream);
 
-    return await pdfDictionaryHelper.ReadDictionary(stream);
+    return await pdfDictionaryHelper.ReadDictionary(stream, objectRepository);
   }
 
-  private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, Trailer trailer)
+  private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, IObjectRepository objectRepository)
   {
-    var objectRepository = new ObjectRepository(pdfObjectReader);
-
     var usedXrefEntries = xRefTable
       .Where(entry => entry.Value.Flag == XRefEntryType.Used);
 
     foreach (var xRefEntry in usedXrefEntries)
     {
-      await objectRepository.RetrieveObject<DocumentObject>(xRefEntry.Key, xRefEntry.Value, stream);
+      await objectRepository.RetrieveObject<DocumentObject>(xRefEntry.Key, stream);
     }
 
     return new Body(objectRepository.Objects);

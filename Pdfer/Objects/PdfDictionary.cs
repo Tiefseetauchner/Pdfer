@@ -11,5 +11,15 @@ public class PdfDictionary : Dictionary<NameObject, DocumentObject>
     set => this[new NameObject(name)] = value;
   }
 
-  public bool TryGetValue(string name, out DocumentObject? value) => TryGetValue(new NameObject(name), out value);
+  public bool TryGetValue(string name, out DocumentObject? value)
+  {
+    value = null;
+
+    if (this.All(_ => _.Key.Value != name))
+      return false;
+
+    value = this[name];
+
+    return true;
+  }
 }

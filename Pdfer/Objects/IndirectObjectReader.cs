@@ -6,10 +6,10 @@ namespace Pdfer.Objects;
 
 public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
 {
-  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream) =>
-    await Read(stream);
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+    await Read(stream, objectRepository);
 
-  public async Task<IndirectObject> Read(Stream stream)
+  public async Task<IndirectObject> Read(Stream stream, ObjectRepository objectRepository)
   {
     var state = new IndirectObjectReaderState();
 
@@ -38,8 +38,11 @@ public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
     if (!state.ReadingSuffix || state.Number == null || state.Generation == null)
       throw CreateInvalidReferenceException();
 
-    // TODO (lena.tauchner): get object from object repository here... somehow.
-    return new IndirectObject(null!, new ObjectIdentifier(state.Number.Value, state.Generation.Value));
+    var objectIdentifier = new ObjectIdentifier(state.Number.Value, state.Generation.Value);
+    var previousPosition = stream.Position;
+    var objectValue = await objectRepository.RetrieveObject<IndirectObject>(objectIdentifier, stream);
+    stream.Position = previousPosition;
+    return new IndirectObject(objectValue?.Value, objectIdentifier);
   }
 
   private static void ReadObjectNumber(char nextChar, IndirectObjectReaderState state)
@@ -73,7 +76,7 @@ public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
   }
 
   private static Exception CreateInvalidReferenceException() =>
-    throw new InvalidOperationException("Indirect Object is not a valid reference.");
+    throw new PdfParsingException(PdfParsingExceptionType.PdfInvalidIndirectObjectReference, "Indirect object reference is not a valid reference.");
 
   private class IndirectObjectReaderState
   {

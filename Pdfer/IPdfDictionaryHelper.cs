@@ -6,5 +6,5 @@ namespace Pdfer;
 
 public interface IPdfDictionaryHelper
 {
-  Task<PdfDictionary> ReadDictionary(Stream stream);
+  Task<PdfDictionary> ReadDictionary(Stream stream, ObjectRepository objectRepository);
 }

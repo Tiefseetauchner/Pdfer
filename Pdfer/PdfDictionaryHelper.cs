@@ -9,7 +9,7 @@ public class PdfDictionaryHelper(
   IStreamHelper streamHelper,
   IPdfObjectReader pdfObjectReader) : IPdfDictionaryHelper
 {
-  public async Task<PdfDictionary> ReadDictionary(Stream stream)
+  public async Task<PdfDictionary> ReadDictionary(Stream stream, ObjectRepository objectRepository)
   {
     var dictionary = new PdfDictionary();
 
@@ -19,9 +19,11 @@ public class PdfDictionaryHelper(
     if (await stream.ReadAsync(buffer) != 2 || buffer[0] != '<' || buffer[1] != '<')
       throw new InvalidOperationException("Dictionary does not start with '<<'");
 
+    await streamHelper.SkipWhiteSpaceCharacters(stream);
+
     while (await streamHelper.Peak(stream, buffer) == 2 && !(buffer[0] == '>' && buffer[1] == '>'))
     {
-      var nextObject = await pdfObjectReader.Read(stream);
+      var nextObject = await pdfObjectReader.Read(stream, objectRepository);
 
       if (key == null)
       {

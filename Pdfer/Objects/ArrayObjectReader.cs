@@ -6,10 +6,10 @@ namespace Pdfer.Objects;
 
 public class ArrayObjectReader(IStreamHelper streamHelper, PdfObjectReader pdfObjectReader) : IDocumentObjectReader<ArrayObject>
 {
-  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream) =>
-    await Read(stream);
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+    await Read(stream, objectRepository);
 
-  public async Task<ArrayObject> Read(Stream stream)
+  public async Task<ArrayObject> Read(Stream stream, ObjectRepository objectRepository)
   {
     var objects = new List<DocumentObject>();
 
@@ -21,7 +21,7 @@ public class ArrayObjectReader(IStreamHelper streamHelper, PdfObjectReader pdfOb
     while (streamHelper.PeakChar(stream) != ']')
     {
       await streamHelper.SkipWhiteSpaceCharacters(stream);
-      objects.Add(await pdfObjectReader.Read(stream));
+      objects.Add(await pdfObjectReader.Read(stream, objectRepository));
       await streamHelper.SkipWhiteSpaceCharacters(stream);
     }
 
