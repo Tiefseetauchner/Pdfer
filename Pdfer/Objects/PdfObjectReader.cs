@@ -7,12 +7,7 @@ namespace Pdfer.Objects;
 
 public class PdfObjectReader(
   IStreamHelper streamHelper,
-  IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
-  IDocumentObjectReader<StringObject> stringObjectReader,
-  IDocumentObjectReader<StreamObject> streamObjectReader,
-  IDocumentObjectReader<NumericObject> numberObjectReader,
-  IDocumentObjectReader<NameObject> nameObjectReader,
-  IDocumentObjectReader<ArrayObject> arrayObjectReader) : IPdfObjectReader
+  IDocumentObjectReaderRepository documentObjectReaderRepository) : IPdfObjectReader
 {
   // TODO (lena): Deal with BooleanObjects
   // TODO (lena): Deal with NullObjects
@@ -29,10 +24,10 @@ public class PdfObjectReader(
     if (objectStartBuffer[0] == '<' &&
         objectStartBuffer[1] != '<' ||
         objectStartBuffer[0] == '(')
-      return await stringObjectReader.Read(stream);
+      return await documentObjectReaderRepository.GetReader<StringObject>().Read(stream);
 
     if (objectStartBuffer[0] == '[')
-      return await arrayObjectReader.Read(stream);
+      return await documentObjectReaderRepository.GetReader<ArrayObject>().Read(stream);
 
     if (objectStartBuffer[0] == '<' &&
         objectStartBuffer[1] == '<')
@@ -48,17 +43,17 @@ public class PdfObjectReader(
       stream.Position = streamPositionAfterObjectStart;
 
       if (contentAfterDictionary.Trim().StartsWith("stream"))
-        return await streamObjectReader.Read(stream);
+        return await documentObjectReaderRepository.GetReader<StreamObject>().Read(stream);
 
-      return await dictionaryObjectReader.Read(stream);
+      return await documentObjectReaderRepository.GetReader<DictionaryObject>().Read(stream);
     }
 
     if (char.IsNumber((char)objectStartBuffer[0]))
-      return await numberObjectReader.Read(stream);
+      return await documentObjectReaderRepository.GetReader<NumericObject>().Read(stream);
 
     if ((char)objectStartBuffer[0] == '/')
-      return await nameObjectReader.Read(stream);
+      return await documentObjectReaderRepository.GetReader<NameObject>().Read(stream);
 
-    throw new NotImplementedException("The object type passed was not yet implemented");
+    throw new NotImplementedException("The object type passed was not yet implemented.");
   }
 }

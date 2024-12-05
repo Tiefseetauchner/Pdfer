@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class StringObjectReader() : IDocumentObjectReader<StringObject>
+public class StringObjectReader() : IDocumentObjectReader
 {
-  public async Task<StringObject> Read(Stream stream)
+  public async Task<DocumentObject> Read(Stream stream)
   {
     var stringBuilder = new StringBuilder();
 

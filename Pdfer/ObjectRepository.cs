@@ -16,7 +16,7 @@ public class ObjectRepository(
     if (Objects.TryGetValue(objectIdentifier, out var obj))
       return obj as T;
 
-    var pdfObject = await pdfObjectReader.Read(stream, this);
+    var pdfObject = await pdfObjectReader.Read(stream);
 
     Objects.Add(objectIdentifier, pdfObject);
 

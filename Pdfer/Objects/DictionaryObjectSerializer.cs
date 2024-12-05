@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class DictionaryObjectSerializer(IPdfDictionaryHelper pdfDictionaryHelper) : IDocumentObjectSerializer<DictionaryObject>
+public class DictionaryObjectSerializer(IDocumentObjectSerializerRepository objectSerializerRepository) : IDocumentObjectSerializer<DictionaryObject>
 {
   public async Task Serialize(Stream stream, DictionaryObject documentObject)
   {
-    await pdfDictionaryHelper.WriteDictionary(stream, documentObject.Value);
+    await PdfDictionaryHelper.WriteDictionary(stream, documentObject.Value, objectSerializerRepository);
   }
 }

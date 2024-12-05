@@ -13,98 +13,42 @@ public class PdfDictionaryHelper(
 {
   public async Task<Dictionary<string, DocumentObject>> ReadDictionary(Stream stream)
   {
+    var dictionary = new Dictionary<string, DocumentObject>();
+
     var buffer = new byte[2];
-    NameObject? key = null;
-    DocumentObject? value = null;
+    string? key = null;
 
     while (await streamHelper.Peak(stream, buffer) != 2 && buffer[0] == '>' && buffer[1] == '>')
     {
+      var nextObject = await pdfObjectReader.Read(stream);
+
       if (key == null)
-        key = pdfObjectReader.Read(stream,)
+      {
+        if (nextObject is not NameObject nameObject)
+          throw new InvalidOperationException("Key in Dictionary was not a NameObject.");
+
+        key = nameObject.Value;
+      }
+      else
+      {
+        dictionary[key] = nextObject;
+        key = null;
+      }
+
+      await streamHelper.SkipWhiteSpaceCharacters(stream);
     }
 
-    if (state.Key != null)
-      AddDictionaryEntry(state.Dictionary, state.Key, state.BufferStringBuilder.ToString()[..^2]);
-
-    return state.Dictionary;
+    return dictionary;
   }
 
-  private static void HandleBrackets(char character, PdfDictionaryReaderState state)
-  {
-    switch (character)
-    {
-      case '<' when state.OpeningBracketStack.Peek() != '(':
-      case '[' when state.OpeningBracketStack.Peek() != '(':
-      case '(':
-        state.OpeningBracketStack.Push(character);
-        break;
-      case '>' when state.OpeningBracketStack.Peek() == '<':
-      case ']' when state.OpeningBracketStack.Peek() == '[':
-      case ')' when state.OpeningBracketStack.Peek() == '(':
-        state.OpeningBracketStack.Pop();
-        break;
-    }
-  }
-
-  private static void HandleCharacter(char character, PdfDictionaryReaderState state)
-  {
-    switch (character)
-    {
-      case '/' when !state.KeyReading && (!string.IsNullOrWhiteSpace(state.BufferStringBuilder.ToString()) || state.Key == null):
-        state.KeyReading = true;
-
-        if (state.Key != null)
-          AddDictionaryEntry(state.Dictionary, state.Key, state.BufferStringBuilder.ToString());
-
-        state.BufferStringBuilder.Clear();
-        break;
-      case '/' when state.KeyReading:
-      case ' ' when state.KeyReading:
-      case '\n' when state.KeyReading:
-      case '\r' when state.KeyReading:
-      case '[' when state.KeyReading:
-      case '(' when state.KeyReading:
-      case '<' when state.KeyReading:
-      case '>' when state.KeyReading:
-        state.KeyReading = false;
-        state.Key = state.BufferStringBuilder.ToString().Trim();
-        state.BufferStringBuilder.Clear();
-        break;
-    }
-  }
-
-  private static bool HandleEscapeCharacter(PdfDictionaryReaderState state, char character)
-  {
-    if (state.Escaped)
-    {
-      state.BufferStringBuilder.Append(character);
-      state.Escaped = false;
-      return true;
-    }
-
-    if (character == '\\')
-      state.Escaped = true;
-    return false;
-  }
-
-  private static void AddDictionaryEntry(Dictionary<string, DocumentObject> dictionary, string arrayKey, string bufferString)
-  {
-    if (dictionary.ContainsKey(arrayKey))
-      throw new InvalidOperationException($"Duplicate key '{arrayKey}' in dictionary");
-    if (bufferString.Trim().Length == 0)
-      throw new InvalidOperationException($"Empty value for key '{arrayKey}' in dictionary");
-
-    dictionary[arrayKey] = bufferString.Trim();
-  }
-
-  public async Task<byte[]> GetDictionaryBytes(Dictionary<string, DocumentObject> dictionary)
+  public static async Task<byte[]> GetDictionaryBytes(Dictionary<string, DocumentObject> dictionary, IDocumentObjectSerializerRepository documentObjectSerializerRepository)
   {
     using var memoryStream = new MemoryStream();
-    await WriteDictionary(memoryStream, dictionary);
+    await WriteDictionary(memoryStream, dictionary, documentObjectSerializerRepository);
     return memoryStream.ToArray();
   }
 
-  public async Task WriteDictionary(Stream stream, Dictionary<string, DocumentObject> dictionary)
+  public static async Task WriteDictionary(Stream stream, Dictionary<string, DocumentObject> dictionary, IDocumentObjectSerializerRepository documentObjectSerializerRepository)
   {
     await stream.WriteAsync("<<"u8.ToArray());
 
@@ -113,8 +57,7 @@ public class PdfDictionaryHelper(
       await stream.WriteAsync("\n"u8.ToArray());
       await stream.WriteAsync(Encoding.UTF8.GetBytes(key));
       await stream.WriteAsync(" "u8.ToArray());
-      // TODO (lena.tauchner): DocumentObjectWriter
-      await stream.WriteAsync(Encoding.UTF8.GetBytes(value));
+      await documentObjectSerializerRepository.GetSerializer(value).Serialize(stream, value);
     }
 
     await stream.WriteAsync(">>"u8.ToArray());

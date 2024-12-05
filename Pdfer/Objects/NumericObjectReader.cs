@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class NumericObjectReader : IDocumentObjectReader<NumericObject>
+public class NumericObjectReader : IDocumentObjectReader
 {
-  public async Task<NumericObject> Read(Stream stream)
+  public async Task<DocumentObject> Read(Stream stream)
   {
     var buffer = new byte[1];
     var number = .0f;

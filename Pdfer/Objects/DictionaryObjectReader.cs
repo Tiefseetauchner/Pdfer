@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class DictionaryObjectReader(IPdfDictionaryHelper pdfDictionaryHelper) : IDocumentObjectReader<DictionaryObject>
+public class DictionaryObjectReader(IPdfDictionaryHelper pdfDictionaryHelper) : IDocumentObjectReader
 {
-  public async Task<DictionaryObject> Read(Stream stream)
+  public async Task<DocumentObject> Read(Stream stream)
   {
     var dictionary = await pdfDictionaryHelper.ReadDictionary(stream);
 

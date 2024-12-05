@@ -5,15 +5,18 @@ using System.Threading.Tasks;
 namespace Pdfer.Objects;
 
 public class StreamObjectReader(
-  IDocumentObjectReader<DictionaryObject> dictionaryObjectReader,
-  IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
+  IDocumentObjectReader dictionaryObjectReader,
+  IStreamHelper streamHelper) : IDocumentObjectReader
 {
-  public async Task<StreamObject> Read(Stream stream)
+  public async Task<DocumentObject> Read(Stream stream)
   {
     var dictionary = await dictionaryObjectReader.Read(stream);
 
+    if (dictionary is not DictionaryObject dictionaryObject)
+      throw new InvalidOperationException("Stream did not start with a dictionary object.");
+
     var oldPosition = stream.Position;
-    var lengthObject = dictionary.Value["/Length"];
+    var lengthObject = dictionaryObject.Value["/Length"];
     var length = lengthObject switch
     {
       IntegerObject integerObject => integerObject.Value,
@@ -31,6 +34,6 @@ public class StreamObjectReader(
     if (bytesRead != length)
       throw new IOException("Unexpected end of stream");
 
-    return new StreamObject(buffer, dictionary);
+    return new StreamObject(buffer, dictionaryObject);
   }
 }

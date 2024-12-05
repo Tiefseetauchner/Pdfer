@@ -6,6 +6,5 @@ namespace Pdfer;
 
 public interface IPdfArrayHelper
 {
-  Task<DocumentObject[]> ReadArray(Stream stream);
   Task WriteArray(Stream stream, DocumentObject[] array);
 }
