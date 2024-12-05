@@ -8,9 +8,9 @@ using Pdfer.Objects;
 namespace Pdfer;
 
 public class PdfDocumentPartParser(
-  StreamHelper streamHelper,
-  PdfDictionaryHelper pdfDictionaryHelper,
-  PdfObjectReader pdfObjectReader)
+  IStreamHelper streamHelper,
+  IPdfDictionaryHelper pdfDictionaryHelper,
+  IIndirectPdfObjectReaderAdapter pdfObjectReader)
 {
   public async Task<List<PdfDocumentPart>> Parse(Stream stream)
   {
@@ -27,7 +27,7 @@ public class PdfDocumentPartParser(
 
       var trailer = new Trailer(trailerDictionary, currentXrefOffset);
 
-      if (trailerDictionary.TryGetValue("/Prev", out var prevXRefOffset))
+      if (trailerDictionary.TryGetValue("Prev", out var prevXRefOffset))
       {
         switch (prevXRefOffset)
         {
@@ -40,7 +40,7 @@ public class PdfDocumentPartParser(
             currentXrefOffset = integerObjectOffset.Value;
             break;
           default:
-            throw new InvalidOperationException($"Key '/Prev' of trailer dictionary was of type {prevXRefOffset.GetType()} but expected {typeof(IntegerObject)}.");
+            throw new InvalidOperationException($"Key '/Prev' of trailer dictionary was of type {prevXRefOffset?.GetType()} but expected {typeof(IntegerObject)}.");
         }
       }
       else
@@ -163,7 +163,7 @@ public class PdfDocumentPartParser(
     return (new ObjectIdentifier(objectNumber, generationNumber), new XRefEntry(offset, type));
   }
 
-  private async Task<Dictionary<string, DocumentObject>> GetTrailerDictionary(Stream stream)
+  private async Task<PdfDictionary> GetTrailerDictionary(Stream stream)
   {
     await streamHelper.ReadStreamTo("trailer", stream);
     await streamHelper.ReadStreamTo("\n", stream);
@@ -180,7 +180,7 @@ public class PdfDocumentPartParser(
 
     foreach (var xRefEntry in usedXrefEntries)
     {
-      await objectRepository.RetrieveObject<DocumentObject>(xRefEntry.Key, stream);
+      await objectRepository.RetrieveObject<DocumentObject>(xRefEntry.Key, xRefEntry.Value, stream);
     }
 
     return new Body(objectRepository.Objects);

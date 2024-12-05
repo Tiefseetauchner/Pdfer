@@ -2,6 +2,6 @@
 
 public interface IDocumentObjectReaderRepository
 {
-  IDocumentObjectReader GetReader<TObjectType>() where TObjectType : DocumentObject;
-  void AddReader<TObjectType>(IDocumentObjectReader documentObjectReader) where TObjectType : DocumentObject;
+  IDocumentObjectReader<TObjectType> GetReader<TObjectType>() where TObjectType : DocumentObject;
+  void AddReader<TObjectType>(IDocumentObjectReader<TObjectType> documentObjectReader) where TObjectType : DocumentObject;
 }

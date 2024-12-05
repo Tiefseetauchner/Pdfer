@@ -9,7 +9,11 @@ public class DocumentObjectSerializerRepository : IDocumentObjectSerializerRepos
 
   public IDocumentObjectSerializer<TObjectType> GetSerializer<TObjectType>(TObjectType documentObject) where TObjectType : DocumentObject =>
     _serializers[documentObject.GetType()] as IDocumentObjectSerializer<TObjectType>
-    ?? throw new InvalidOperationException($"The serializer for '{typeof(TObjectType)}' could not be found in the {nameof(DocumentObjectSerializerRepository)}");
+    ?? throw new ArgumentException($"No serializer found for type {typeof(TObjectType)}");
+
+  public IDocumentObjectSerializer<TObjectType> GetSerializer<TObjectType>() where TObjectType : DocumentObject =>
+    _serializers[typeof(TObjectType)] as IDocumentObjectSerializer<TObjectType>
+    ?? throw new ArgumentException($"No serializer found for type {typeof(TObjectType)}");
 
   public void AddSerializer<TObjectType>(IDocumentObjectSerializer<TObjectType> documentObjectReader) where TObjectType : DocumentObject =>
     _serializers[typeof(TObjectType)] = documentObjectReader;

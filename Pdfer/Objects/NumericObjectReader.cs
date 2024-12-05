@@ -4,16 +4,19 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class NumericObjectReader : IDocumentObjectReader
+public class NumericObjectReader : IDocumentObjectReader<NumericObject>
 {
-  public async Task<DocumentObject> Read(Stream stream)
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream) =>
+    await Read(stream);
+
+  public async Task<NumericObject> Read(Stream stream)
   {
     var buffer = new byte[1];
     var number = .0f;
     var isDecimal = false;
     var decimalDivider = 1;
 
-    while (await stream.ReadAsync(buffer) > 0)
+    while (await stream.ReadAsync(buffer) > 0 && char.IsNumber((char)buffer[0]))
     {
       if (buffer[0] == '.')
       {
@@ -24,9 +27,6 @@ public class NumericObjectReader : IDocumentObjectReader
 
         continue;
       }
-
-      if (!char.IsNumber((char)buffer[0]))
-        throw CreateInvalidFormattingException();
 
       if (isDecimal)
         decimalDivider *= 10;

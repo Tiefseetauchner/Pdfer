@@ -18,7 +18,6 @@ public class IndirectPdfObjectReaderAdapter(IPdfObjectReader adaptee, IStreamHel
 
     var documentObject = await adaptee.Read(stream);
 
-    // TODO (lena.tauchner): Set RawValue
     return new IndirectObject(documentObject, objectIdentifier);
   }
 }

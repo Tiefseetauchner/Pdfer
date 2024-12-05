@@ -13,23 +13,26 @@ public class PdfDocumentPartParserFactory : IPdfDocumentPartParserFactory
     var pdfObjectReader = new PdfObjectReader(
       streamHelper,
       documentObjectReaderRepository);
+    var indirectPdfObjectReaderAdapter = new IndirectPdfObjectReaderAdapter(
+      pdfObjectReader,
+      streamHelper);
 
     var pdfDictionaryHelper = new PdfDictionaryHelper(streamHelper, pdfObjectReader);
     var dictionaryObjectReader = new DictionaryObjectReader(pdfDictionaryHelper);
 
-    documentObjectReaderRepository.AddReader<ArrayObject>(new ArrayObjectReader(streamHelper, pdfObjectReader));
-    documentObjectReaderRepository.AddReader<DictionaryObject>(dictionaryObjectReader);
-    documentObjectReaderRepository.AddReader<IndirectObject>(new IndirectObjectReader());
-    documentObjectReaderRepository.AddReader<NameObject>(new NameObjectReader());
-    documentObjectReaderRepository.AddReader<NumericObject>(new NumericObjectReader());
-    documentObjectReaderRepository.AddReader<StreamObject>(new StreamObjectReader(dictionaryObjectReader, streamHelper));
-    documentObjectReaderRepository.AddReader<StringObject>(new StringObjectReader());
+    documentObjectReaderRepository.AddReader(new ArrayObjectReader(streamHelper, pdfObjectReader));
+    documentObjectReaderRepository.AddReader(dictionaryObjectReader);
+    documentObjectReaderRepository.AddReader(new IndirectObjectReader());
+    documentObjectReaderRepository.AddReader(new NameObjectReader());
+    documentObjectReaderRepository.AddReader(new NumericObjectReader());
+    documentObjectReaderRepository.AddReader(new StreamObjectReader(dictionaryObjectReader, streamHelper));
+    documentObjectReaderRepository.AddReader(new StringObjectReader());
 
 
     return new PdfDocumentPartParser(
       streamHelper,
       pdfDictionaryHelper,
-      pdfObjectReader);
+      indirectPdfObjectReaderAdapter);
   }
 }
 

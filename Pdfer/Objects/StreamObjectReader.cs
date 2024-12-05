@@ -6,9 +6,12 @@ namespace Pdfer.Objects;
 
 public class StreamObjectReader(
   IDocumentObjectReader dictionaryObjectReader,
-  IStreamHelper streamHelper) : IDocumentObjectReader
+  IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
 {
-  public async Task<DocumentObject> Read(Stream stream)
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream) =>
+    await Read(stream);
+
+  public async Task<StreamObject> Read(Stream stream)
   {
     var dictionary = await dictionaryObjectReader.Read(stream);
 
@@ -16,7 +19,7 @@ public class StreamObjectReader(
       throw new InvalidOperationException("Stream did not start with a dictionary object.");
 
     var oldPosition = stream.Position;
-    var lengthObject = dictionaryObject.Value["/Length"];
+    var lengthObject = dictionaryObject.Value["Length"];
     var length = lengthObject switch
     {
       IntegerObject integerObject => integerObject.Value,

@@ -4,9 +4,12 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class ArrayObjectReader(IStreamHelper streamHelper, PdfObjectReader pdfObjectReader) : IDocumentObjectReader
+public class ArrayObjectReader(IStreamHelper streamHelper, PdfObjectReader pdfObjectReader) : IDocumentObjectReader<ArrayObject>
 {
-  public async Task<DocumentObject> Read(Stream stream)
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream) =>
+    await Read(stream);
+
+  public async Task<ArrayObject> Read(Stream stream)
   {
     var objects = new List<DocumentObject>();
 
@@ -21,6 +24,9 @@ public class ArrayObjectReader(IStreamHelper streamHelper, PdfObjectReader pdfOb
       objects.Add(await pdfObjectReader.Read(stream));
       await streamHelper.SkipWhiteSpaceCharacters(stream);
     }
+
+    // NOTE: We have to skip the closing ']' character here.
+    streamHelper.ReadChar(stream);
 
     return new ArrayObject(objects.ToArray());
   }

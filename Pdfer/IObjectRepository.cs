@@ -9,6 +9,6 @@ public interface IObjectRepository
 {
   Dictionary<ObjectIdentifier, DocumentObject> Objects { get; }
 
-  Task<T?> RetrieveObject<T>(ObjectIdentifier objectIdentifier, Stream stream)
+  Task<T?> RetrieveObject<T>(ObjectIdentifier objectIdentifier, XRefEntry xRefEntry, Stream stream)
     where T : DocumentObject;
 }

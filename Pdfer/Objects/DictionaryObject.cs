@@ -1,8 +1,6 @@
-using System.Collections.Generic;
-
 namespace Pdfer.Objects;
 
-public class DictionaryObject(Dictionary<string, DocumentObject> value) : DocumentObject
+public class DictionaryObject(PdfDictionary value) : DocumentObject
 {
-  public Dictionary<string, DocumentObject> Value => value;
+  public PdfDictionary Value => value;
 }

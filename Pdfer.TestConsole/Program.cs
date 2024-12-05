@@ -13,7 +13,7 @@ class Program
 
     var pdfDocument = await new PdfDocumentParser(new PdfDocumentPartParserFactory().Create()).Parse(File.OpenRead(args[0]));
 
-    var infoDictionary = pdfDocument.DocumentParts[0].Trailer.TrailerDictionary["/Info"] switch
+    var infoDictionary = pdfDocument.DocumentParts[0].Trailer.TrailerDictionary["Info"] switch
     {
       IndirectObject indirectObject => pdfDocument.DocumentParts[0].Body[indirectObject.ObjectIdentifier] as DictionaryObject
                                        ?? throw new InvalidOperationException("Info dictionary not found"),
@@ -21,8 +21,8 @@ class Program
       _ => throw new InvalidOperationException("Info dictionary not found")
     };
 
-    infoDictionary.Value["/Producer"] = new StringObject(PdfStringHelper.AsHexString("PDFer"));
-    infoDictionary.Value["/Title"] = new StringObject(PdfStringHelper.AsHexString("My PDFer Specification!!!"));
+    infoDictionary.Value["Producer"] = new StringObject(PdfStringHelper.AsHexString("PDFer"));
+    infoDictionary.Value["Title"] = new StringObject(PdfStringHelper.AsHexString("My PDFer Specification!!!"));
 
     await using var outputStream = File.OpenWrite(args[1]);
     outputStream.SetLength(0);

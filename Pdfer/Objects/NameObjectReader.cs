@@ -4,12 +4,20 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class NameObjectReader : IDocumentObjectReader
+public class NameObjectReader : IDocumentObjectReader<NameObject>
 {
-  public async Task<DocumentObject> Read(Stream stream)
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream) =>
+    await Read(stream);
+
+  public async Task<NameObject> Read(Stream stream)
   {
     var name = new StringBuilder();
     var nextByte = new byte[1];
+
+    var firstChar = await stream.ReadAsync(nextByte);
+
+    if (firstChar < 1 || nextByte[0] != 47)
+      throw new IOException("Name Object is not a valid name.");
 
     while (await stream.ReadAsync(nextByte) != 0)
     {
