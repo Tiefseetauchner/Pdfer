@@ -4,21 +4,29 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class StreamObjectReader(IPdfDictionaryHelper dictionaryHelper, IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
+public class StreamObjectReader(
+  IDocumentObjectReader dictionaryObjectReader,
+  IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
 {
-  public async Task<StreamObject> Read(Stream stream, IObjectRepository objectRepository, ObjectIdentifier objectIdentifier)
-  {
-    using var rawStream = new MemoryStream();
-    rawStream.Write(objectIdentifier.GetHeaderBytes());
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+    await Read(stream, objectRepository);
 
-    var (dictionary, rawBytes) = await dictionaryHelper.ReadDictionary(stream);
-    rawStream.Write(rawBytes);
+  public async Task<StreamObject> Read(Stream stream, ObjectRepository objectRepository)
+  {
+    var dictionary = await dictionaryObjectReader.Read(stream, objectRepository);
+
+    if (dictionary is not DictionaryObject dictionaryObject)
+      throw new InvalidOperationException("Stream did not start with a dictionary object.");
 
     var oldPosition = stream.Position;
-    var length = long.TryParse(dictionary["/Length"], out var lengthNumber)
-      ? lengthNumber
-      : (await objectRepository.RetrieveObject<IntegerObject>(ObjectIdentifier.ParseReference(dictionary["/Length"]), stream))?.Value
-        ?? throw new ArgumentException("Invalid length of stream object");
+    var lengthObject = dictionaryObject.Value["Length"];
+    var length = lengthObject switch
+    {
+      IntegerObject integerObject => integerObject.Value,
+      IndirectObject indirectObject => (indirectObject.Value as IntegerObject)?.Value
+                                       ?? throw new InvalidOperationException($"Object referenced by key '/Length' of stream object was of type {indirectObject.Value?.GetType()} but expected {typeof(IntegerObject)}."),
+      _ => throw new InvalidOperationException($"Key '/Length' of stream object was of type {lengthObject.GetType()} but expected {typeof(IntegerObject)}.")
+    };
     stream.Position = oldPosition;
 
     await streamHelper.ReadStreamTo("stream", stream);
@@ -30,11 +38,6 @@ public class StreamObjectReader(IPdfDictionaryHelper dictionaryHelper, IStreamHe
     if (bytesRead != length)
       throw new IOException("Unexpected end of stream");
 
-    rawStream.Write(buffer);
-    rawStream.Write(await streamHelper.ReadStreamTo("endstream", stream));
-    rawStream.Write("endstream\n"u8.ToArray());
-    rawStream.Write("endobj"u8.ToArray());
-
-    return new StreamObject(buffer, rawStream.ToArray(), objectIdentifier, dictionary);
+    return new StreamObject(buffer, dictionaryObject);
   }
 }

@@ -3,12 +3,13 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class DictionaryObjectSerializer(IPdfDictionaryHelper pdfDictionaryHelper) : IDocumentObjectSerializer<DictionaryObject>
+public class DictionaryObjectSerializer(IDocumentObjectSerializerRepository objectSerializerRepository) : IDocumentObjectSerializer<DictionaryObject>
 {
+  async Task IDocumentObjectSerializer.Serialize(Stream stream, DocumentObject documentObject) =>
+    await Serialize(stream, (DictionaryObject)documentObject);
+
   public async Task Serialize(Stream stream, DictionaryObject documentObject)
   {
-    await stream.WriteAsync(documentObject.ObjectIdentifier.GetHeaderBytes());
-    await pdfDictionaryHelper.WriteDictionary(stream, documentObject.Value);
-    await stream.WriteAsync("\nendobj"u8.ToArray());
+    await PdfDictionaryHelper.WriteDictionary(stream, documentObject.Value, objectSerializerRepository);
   }
 }

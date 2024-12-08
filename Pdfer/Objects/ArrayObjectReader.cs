@@ -1,21 +1,33 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class ArrayObjectReader(IPdfArrayHelper pdfArrayHelper) : IDocumentObjectReader<ArrayObject>
+public class ArrayObjectReader(IStreamHelper streamHelper, PdfObjectReader pdfObjectReader) : IDocumentObjectReader<ArrayObject>
 {
-  public async Task<ArrayObject> Read(Stream stream, IObjectRepository objectRepository, ObjectIdentifier objectIdentifier)
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+    await Read(stream, objectRepository);
+
+  public async Task<ArrayObject> Read(Stream stream, ObjectRepository objectRepository)
   {
-    var rawData = new MemoryStream();
-    rawData.Write(objectIdentifier.GetHeaderBytes());
+    var objects = new List<DocumentObject>();
 
-    var (array, rawArrayBytes) = await pdfArrayHelper.ReadArray(stream);
+    var firstChar = streamHelper.ReadChar(stream);
 
-    rawData.Write(rawArrayBytes);
+    if (firstChar != '[')
+      throw new IOException($"Could not parse array: Expected '[' but got '{firstChar}'");
 
-    rawData.Write("\nendobj"u8.ToArray());
+    while (streamHelper.PeakChar(stream) != ']')
+    {
+      await streamHelper.SkipWhiteSpaceCharacters(stream);
+      objects.Add(await pdfObjectReader.Read(stream, objectRepository));
+      await streamHelper.SkipWhiteSpaceCharacters(stream);
+    }
 
-    return new ArrayObject(array, rawData.ToArray(), objectIdentifier);
+    // NOTE: We have to skip the closing ']' character here.
+    streamHelper.ReadChar(stream);
+
+    return new ArrayObject(objects.ToArray());
   }
 }

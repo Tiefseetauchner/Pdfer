@@ -7,25 +7,34 @@ public class PdfDocumentPartParserFactory : IPdfDocumentPartParserFactory
   public PdfDocumentPartParser Create()
   {
     var streamHelper = new StreamHelper();
-    var pdfDictionaryHelper = new PdfDictionaryHelper(streamHelper);
-    var pdfArrayHelper = new PdfArrayHelper(streamHelper);
+
+    var documentObjectReaderRepository = new DocumentObjectReaderRepository();
 
     var pdfObjectReader = new PdfObjectReader(
-      pdfDictionaryHelper,
       streamHelper,
-      new DictionaryObjectReader(
-        streamHelper,
-        pdfDictionaryHelper),
-      new StringObjectReader(),
-      new StreamObjectReader(pdfDictionaryHelper, streamHelper),
-      new NumberObjectReader(streamHelper),
-      new NameObjectReader(),
-      new ArrayObjectReader(pdfArrayHelper));
+      documentObjectReaderRepository);
+    var indirectPdfObjectReaderAdapter = new IndirectPdfObjectReaderAdapter(
+      pdfObjectReader,
+      streamHelper);
+
+    var pdfDictionaryHelper = new PdfDictionaryHelper(streamHelper, pdfObjectReader);
+    var dictionaryObjectReader = new DictionaryObjectReader(pdfDictionaryHelper);
+
+    documentObjectReaderRepository.AddReader(new ArrayObjectReader(streamHelper, pdfObjectReader));
+    documentObjectReaderRepository.AddReader(new BooleanObjectReader(streamHelper));
+    documentObjectReaderRepository.AddReader(dictionaryObjectReader);
+    documentObjectReaderRepository.AddReader(new IndirectObjectReader());
+    documentObjectReaderRepository.AddReader(new NameObjectReader());
+    documentObjectReaderRepository.AddReader(new NullObjectReader());
+    documentObjectReaderRepository.AddReader(new NumericObjectReader());
+    documentObjectReaderRepository.AddReader(new StreamObjectReader(dictionaryObjectReader, streamHelper));
+    documentObjectReaderRepository.AddReader(new StringObjectReader());
+
 
     return new PdfDocumentPartParser(
       streamHelper,
-      new PdfDictionaryHelper(streamHelper),
-      pdfObjectReader);
+      pdfDictionaryHelper,
+      indirectPdfObjectReaderAdapter);
   }
 }
 

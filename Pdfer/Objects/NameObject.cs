@@ -1,6 +1,8 @@
 namespace Pdfer.Objects;
 
-public class NameObject(string value, byte[] rawValue, ObjectIdentifier objectIdentifier) : DocumentObject(rawValue, objectIdentifier)
+public class NameObject(string value) : DocumentObject()
 {
   public string Value => value;
+
+  public override string ToString() => $"/{Value}";
 }

@@ -1,13 +1,11 @@
-using System.Collections.Generic;
-
 namespace Pdfer.Objects;
 
 public class StreamObject(
   byte[] value,
-  byte[] rawValue,
-  ObjectIdentifier objectIdentifier,
-  Dictionary<string, string> dictionary) : DocumentObject(rawValue, objectIdentifier)
+  DictionaryObject dictionary) : DocumentObject
 {
-  public Dictionary<string, string> Dictionary => dictionary;
+  public DictionaryObject Dictionary => dictionary;
   public byte[] Value => value;
+
+  public override string ToString() => $"stream\n{Value}\nendstream";
 }

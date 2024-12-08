@@ -8,9 +8,9 @@ using Pdfer.Objects;
 namespace Pdfer;
 
 public class PdfDocumentPartParser(
-  StreamHelper streamHelper,
-  PdfDictionaryHelper pdfDictionaryHelper,
-  PdfObjectReader pdfObjectReader)
+  IStreamHelper streamHelper,
+  IPdfDictionaryHelper pdfDictionaryHelper,
+  IIndirectPdfObjectReaderAdapter pdfObjectReader)
 {
   public async Task<List<PdfDocumentPart>> Parse(Stream stream)
   {
@@ -23,21 +23,34 @@ public class PdfDocumentPartParser(
     while (hasNextPart)
     {
       var xrefTable = await GetXrefTable(stream, streamReader, currentXrefOffset);
-      var trailerDictionary = await GetTrailerDictionary(stream);
+
+      var objectRepository = new ObjectRepository(pdfObjectReader, xrefTable);
+      var body = await GetBody(stream, xrefTable, objectRepository);
+
+      var trailerDictionary = await GetTrailerDictionary(stream, objectRepository);
 
       var trailer = new Trailer(trailerDictionary, currentXrefOffset);
 
-      if (trailerDictionary.TryGetValue("/Prev", out var prevXRefOffset))
+      if (trailerDictionary.TryGetValue("Prev", out var prevXRefOffset))
       {
-        hasNextPart = prevXRefOffset != "0";
-        currentXrefOffset = long.Parse(prevXRefOffset);
+        switch (prevXRefOffset)
+        {
+          case IntegerObject integerObjectOffset:
+            hasNextPart = integerObjectOffset.Value != 0;
+            currentXrefOffset = integerObjectOffset.Value;
+            break;
+          case IndirectObject { Value: IntegerObject integerObjectOffset }:
+            hasNextPart = integerObjectOffset.Value != 0;
+            currentXrefOffset = integerObjectOffset.Value;
+            break;
+          default:
+            throw new InvalidOperationException($"Key '/Prev' of trailer dictionary was of type {prevXRefOffset?.GetType()} but expected {typeof(IntegerObject)}.");
+        }
       }
       else
       {
         hasNextPart = false;
       }
-
-      var body = await GetBody(stream, xrefTable, trailer);
 
       documentParts = documentParts.Prepend(new PdfDocumentPart(body, xrefTable, trailer)).ToList();
     }
@@ -152,18 +165,16 @@ public class PdfDocumentPartParser(
     return (new ObjectIdentifier(objectNumber, generationNumber), new XRefEntry(offset, type));
   }
 
-  private async Task<Dictionary<string, string>> GetTrailerDictionary(Stream stream)
+  private async Task<PdfDictionary> GetTrailerDictionary(Stream stream, ObjectRepository objectRepository)
   {
     await streamHelper.ReadStreamTo("trailer", stream);
     await streamHelper.ReadStreamTo("\n", stream);
 
-    return (await pdfDictionaryHelper.ReadDictionary(stream)).dictionary;
+    return await pdfDictionaryHelper.ReadDictionary(stream, objectRepository);
   }
 
-  private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, Trailer trailer)
+  private async Task<Body> GetBody(Stream stream, XRefTable xRefTable, IObjectRepository objectRepository)
   {
-    var objectRepository = new ObjectRepository(pdfObjectReader, xRefTable);
-
     var usedXrefEntries = xRefTable
       .Where(entry => entry.Value.Flag == XRefEntryType.Used);
 

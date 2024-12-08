@@ -1,140 +1,72 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
+using Pdfer.Objects;
 
 namespace Pdfer;
 
-public class PdfDictionaryHelper(IStreamHelper streamHelper) : IPdfDictionaryHelper
+public class PdfDictionaryHelper(
+  IStreamHelper streamHelper,
+  IPdfObjectReader pdfObjectReader) : IPdfDictionaryHelper
 {
-  public async Task<(Dictionary<string, string> dictionary, byte[] bytes)> ReadDictionary(Stream stream)
+  public async Task<PdfDictionary> ReadDictionary(Stream stream, ObjectRepository objectRepository)
   {
-    var state = new PdfDictionaryReaderState();
+    var dictionary = new PdfDictionary();
 
-    HandleFirstCharacter(stream, state);
+    var buffer = new byte[2];
+    NameObject? key = null;
 
-    while (state.OpeningBracketStack.Count != 0)
+    if (await stream.ReadAsync(buffer) != 2 || buffer[0] != '<' || buffer[1] != '<')
+      throw new InvalidOperationException("Dictionary does not start with '<<'");
+
+    await streamHelper.SkipWhiteSpaceCharacters(stream);
+
+    while (await streamHelper.Peak(stream, buffer) == 2 && !(buffer[0] == '>' && buffer[1] == '>'))
     {
-      if (await stream.ReadAsync(state.Buffer) == 0)
-        throw new IOException("Unexpected end of stream");
+      var nextObject = await pdfObjectReader.Read(stream, objectRepository);
 
-      var character = (char)state.Buffer[0];
-
-      state.RawBytes.Write(state.Buffer);
-
-      if (HandleEscapeCharacter(state, character))
-        continue;
-
-      if (state.OpeningBracketStack.Count == 2)
+      if (key == null)
       {
-        HandleCharacter(character, state);
+        if (nextObject is not NameObject nameObject)
+          throw new InvalidOperationException("Key in Dictionary was not a NameObject.");
+
+        key = nameObject;
+      }
+      else
+      {
+        dictionary[key] = nextObject;
+        key = null;
       }
 
-      HandleBrackets(character, state);
-
-      state.BufferStringBuilder.Append(character);
+      await streamHelper.SkipWhiteSpaceCharacters(stream);
     }
 
-    if (state.Key != null)
-      AddDictionaryEntry(state.Dictionary, state.Key, state.BufferStringBuilder.ToString()[..^2]);
+    // NOTE: We have to skip the closing '>>' character here.
+    var read = await stream.ReadAsync(buffer);
 
-    return (state.Dictionary, state.RawBytes.ToArray());
+    if (read != 2 || buffer[0] != '>' || buffer[1] != '>')
+      throw new InvalidOperationException("Dictionary does not end with '>>'");
+
+    return dictionary;
   }
 
-  private static void HandleBrackets(char character, PdfDictionaryReaderState state)
-  {
-    switch (character)
-    {
-      case '<' when state.OpeningBracketStack.Peek() != '(':
-      case '[' when state.OpeningBracketStack.Peek() != '(':
-      case '(':
-        state.OpeningBracketStack.Push(character);
-        break;
-      case '>' when state.OpeningBracketStack.Peek() == '<':
-      case ']' when state.OpeningBracketStack.Peek() == '[':
-      case ')' when state.OpeningBracketStack.Peek() == '(':
-        state.OpeningBracketStack.Pop();
-        break;
-    }
-  }
-
-  private static void HandleCharacter(char character, PdfDictionaryReaderState state)
-  {
-    switch (character)
-    {
-      case '/' when !state.KeyReading && (!string.IsNullOrWhiteSpace(state.BufferStringBuilder.ToString()) || state.Key == null):
-        state.KeyReading = true;
-
-        if (state.Key != null)
-          AddDictionaryEntry(state.Dictionary, state.Key, state.BufferStringBuilder.ToString());
-
-        state.BufferStringBuilder.Clear();
-        break;
-      case '/' when state.KeyReading:
-      case ' ' when state.KeyReading:
-      case '\n' when state.KeyReading:
-      case '\r' when state.KeyReading:
-      case '[' when state.KeyReading:
-      case '(' when state.KeyReading:
-      case '<' when state.KeyReading:
-      case '>' when state.KeyReading:
-        state.KeyReading = false;
-        state.Key = state.BufferStringBuilder.ToString().Trim();
-        state.BufferStringBuilder.Clear();
-        break;
-    }
-  }
-
-  private static bool HandleEscapeCharacter(PdfDictionaryReaderState state, char character)
-  {
-    if (state.Escaped)
-    {
-      state.BufferStringBuilder.Append(character);
-      state.Escaped = false;
-      return true;
-    }
-
-    if (character == '\\')
-      state.Escaped = true;
-    return false;
-  }
-
-  private void HandleFirstCharacter(Stream stream, PdfDictionaryReaderState state)
-  {
-    var firstChar = streamHelper.ReadChar(stream);
-    state.BufferStringBuilder.Append(firstChar);
-    state.OpeningBracketStack.Push(firstChar);
-    state.RawBytes.WriteByte((byte)firstChar);
-  }
-
-  private static void AddDictionaryEntry(Dictionary<string, string> dictionary, string arrayKey, string bufferString)
-  {
-    if (dictionary.ContainsKey(arrayKey))
-      throw new InvalidOperationException($"Duplicate key '{arrayKey}' in dictionary");
-    if (bufferString.Trim().Length == 0)
-      throw new InvalidOperationException($"Empty value for key '{arrayKey}' in dictionary");
-
-    dictionary[arrayKey] = bufferString.Trim();
-  }
-
-  public async Task<byte[]> GetDictionaryBytes(Dictionary<string, string> dictionary)
+  public static async Task<byte[]> GetDictionaryBytes(PdfDictionary dictionary, IDocumentObjectSerializerRepository documentObjectSerializerRepository)
   {
     using var memoryStream = new MemoryStream();
-    await WriteDictionary(memoryStream, dictionary);
+    await WriteDictionary(memoryStream, dictionary, documentObjectSerializerRepository);
     return memoryStream.ToArray();
   }
 
-  public async Task WriteDictionary(Stream stream, Dictionary<string, string> dictionary)
+  public static async Task WriteDictionary(Stream stream, PdfDictionary dictionary, IDocumentObjectSerializerRepository documentObjectSerializerRepository)
   {
     await stream.WriteAsync("<<"u8.ToArray());
 
     foreach (var (key, value) in dictionary)
     {
       await stream.WriteAsync("\n"u8.ToArray());
-      await stream.WriteAsync(Encoding.UTF8.GetBytes(key));
+      await documentObjectSerializerRepository.GetSerializer<NameObject>().Serialize(stream, key);
       await stream.WriteAsync(" "u8.ToArray());
-      await stream.WriteAsync(Encoding.UTF8.GetBytes(value));
+      await documentObjectSerializerRepository.GetSerializer(value).Serialize(stream, value);
     }
 
     await stream.WriteAsync(">>"u8.ToArray());

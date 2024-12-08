@@ -6,27 +6,31 @@ namespace Pdfer.Objects;
 
 public class NameObjectReader : IDocumentObjectReader<NameObject>
 {
-  public async Task<NameObject> Read(Stream stream, IObjectRepository objectRepository, ObjectIdentifier objectIdentifier)
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+    await Read(stream, objectRepository);
+
+  public async Task<NameObject> Read(Stream stream, ObjectRepository objectRepository)
   {
-    using var rawData = new MemoryStream();
-
-    rawData.Write(objectIdentifier.GetHeaderBytes());
-
     var name = new StringBuilder();
     var nextByte = new byte[1];
 
+    var firstChar = await stream.ReadAsync(nextByte);
+
+    if (firstChar < 1 || nextByte[0] != 47)
+      throw new IOException("Name Object is not a valid name.");
+
     while (await stream.ReadAsync(nextByte) != 0)
     {
-      if (nextByte[0] == ' ' || nextByte[0] == '\n' || nextByte[0] == '\r')
-        break;
+      // TODO (lena.tauchner): Decode #XX
 
-      rawData.Write(nextByte);
+      if (nextByte[0] == '/' || char.IsWhiteSpace((char)nextByte[0]) || nextByte[0] == '(' || nextByte[0] == '[' || nextByte[0] == '<' || nextByte[0] == '>' || nextByte[0] == ')' || nextByte[0] == ']')
+        break;
 
       name.Append((char)nextByte[0]);
     }
 
-    rawData.Write("\nendobj"u8);
+    stream.Position -= 1;
 
-    return new NameObject(name.ToString(), rawData.ToArray(), objectIdentifier);
+    return new NameObject(name.ToString());
   }
 }

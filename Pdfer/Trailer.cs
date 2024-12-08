@@ -1,7 +1,7 @@
-using System.Collections.Generic;
+using Pdfer.Objects;
 
 namespace Pdfer;
 
 public record Trailer(
-  Dictionary<string, string> TrailerDictionary,
+  PdfDictionary TrailerDictionary,
   long XRefByteOffset);

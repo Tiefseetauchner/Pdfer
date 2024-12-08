@@ -58,6 +58,13 @@ public record ObjectIdentifier(
   public byte[] GetHeaderBytes() =>
     Encoding.UTF8.GetBytes(GetHeaderString());
 
-  public string GetHeaderString() =>
+
+  private string GetHeaderString() =>
     $"{ObjectNumber} {Generation} obj\n";
+
+  public byte[] GetReferenceBytes() =>
+    Encoding.UTF8.GetBytes(GetReferenceString());
+
+  private string GetReferenceString() =>
+    $"{ObjectNumber} {Generation} R";
 }

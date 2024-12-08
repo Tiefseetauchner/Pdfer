@@ -9,13 +9,7 @@ using Pdfer.Objects;
 namespace Pdfer;
 
 public class PdfDocumentWriter(
-  IPdfDictionaryHelper pdfDictionaryHelper,
-  IDocumentObjectSerializer<DictionaryObject> dictionaryObjectSerializer,
-  IDocumentObjectSerializer<NumberObject> numberObjectSerializer,
-  IDocumentObjectSerializer<StreamObject> streamObjectSerializer,
-  IDocumentObjectSerializer<StringObject> stringObjectSerializer,
-  IDocumentObjectSerializer<NameObject> nameObjectSerializer,
-  IDocumentObjectSerializer<ArrayObject> arrayObjectSerializer) : IPdfDocumentWriter
+  IDocumentObjectSerializerRepository objectSerializerRepository) : IPdfDocumentWriter
 {
   public async Task Write(Stream stream, PdfDocument pdfDocument)
   {
@@ -67,41 +61,18 @@ public class PdfDocumentWriter(
     {
       var position = stream.Position;
       xRefTable.Add(key, new XRefEntry(position, XRefEntryType.Used));
-      await WriteObject(stream, value);
+      await WriteObject(stream, value, key);
       await stream.WriteAsync("\n\n"u8.ToArray());
     }
 
     return xRefTable;
   }
 
-  // TODO (lena): Write to stream directly
-  private async Task WriteObject(Stream stream, DocumentObject value)
+  private async Task WriteObject(Stream stream, DocumentObject value, ObjectIdentifier key)
   {
-    switch (value)
-    {
-      case DictionaryObject dictionaryObject:
-        await dictionaryObjectSerializer.Serialize(stream, dictionaryObject);
-        break;
-      case NumberObject numberObject:
-        await numberObjectSerializer.Serialize(stream, numberObject);
-        break;
-      case StreamObject streamObject:
-        await streamObjectSerializer.Serialize(stream, streamObject);
-        break;
-      case StringObject stringObject:
-        await stringObjectSerializer.Serialize(stream, stringObject);
-        break;
-      case NameObject nameObject:
-        await nameObjectSerializer.Serialize(stream, nameObject);
-        break;
-      case ArrayObject arrayObject:
-        await arrayObjectSerializer.Serialize(stream, arrayObject);
-        break;
-      default:
-        throw new InvalidOperationException($"Unknown object type '{value.GetType()}'");
-    }
-
-    await stream.FlushAsync();
+    await stream.WriteAsync(key.GetHeaderBytes());
+    await objectSerializerRepository.GetSerializer(value).Serialize(stream, value);
+    await stream.WriteAsync("\nendobj"u8.ToArray());
   }
 
   private long WriteXrefTable(Stream stream, XRefTable xRefTable)
@@ -153,7 +124,7 @@ public class PdfDocumentWriter(
   {
     await stream.WriteAsync("trailer\n"u8.ToArray());
 
-    await pdfDictionaryHelper.WriteDictionary(stream, pdfDocumentTrailer.TrailerDictionary);
+    await PdfDictionaryHelper.WriteDictionary(stream, pdfDocumentTrailer.TrailerDictionary, objectSerializerRepository);
 
     await stream.WriteAsync("\n"u8.ToArray());
     await stream.WriteAsync("startxref\n"u8.ToArray());
