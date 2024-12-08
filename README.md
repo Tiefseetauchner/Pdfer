@@ -35,9 +35,16 @@ Currently, manipulation of PDFs is very limited. You can access and edit the obj
 the dictionary:
 
 ```csharp
-var infoReference = ObjectIdentifier.ParseReference(pdfDocument.Trailer.TrailerDictionary["/Info"]);
-var infoDictionary = pdfDocument.Body[infoReference] as DictionaryObject ?? throw new InvalidOperationException("Info dictionary not found");
-infoDictionary.Value["/Producer"] = new PdfStringHelper().GetHexString("My PDFer");
+var infoDictionary = pdfDocument.DocumentParts[0].Trailer.TrailerDictionary["Info"] switch
+{
+  IndirectObject indirectObject => pdfDocument.DocumentParts[0].Body[indirectObject.ObjectIdentifier] as DictionaryObject
+                                   ?? throw new InvalidOperationException("Info dictionary not found"),
+  DictionaryObject dictionaryObject => dictionaryObject,
+  _ => throw new InvalidOperationException("Info dictionary not found")
+};
+
+infoDictionary.Value["Producer"] = new StringObject(PdfStringHelper.AsHexString("PDFer"));
+infoDictionary.Value["Title"] = new StringObject(PdfStringHelper.AsHexString("My PDFer Specification!!!"));
 ```
 
 What you currently can't do is changing the raw data, even though there's a `RawValue` on `DocumentObject`, this is currently ignored.
