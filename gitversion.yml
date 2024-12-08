@@ -1,0 +1,24 @@
+version
+mode: Mainline
+tag-prefix: 'release/'
+branches:
+  main:
+    regex: ^main$
+    is-main-branch: true
+    tag: ''
+    increment: Patch
+    mode: ContinuousDeployment
+  feature:
+    regex: ^feature[/-]
+    tag: 'ALPHA'
+    increment: Patch
+  bugfix:
+    regex: ^bugfix[/-]
+    tag: 'ALPHA'
+    increment: Patch
+ignore:
+  sha: []
+commit-message-incrementing: Enabled
+assembly-versioning-scheme: MajorMinorPatch
+assembly-file-versioning-scheme: MajorMinorPatch
+assembly-informational-format: '{Major}.{Minor}.{Patch}-{PreReleaseLabel}'
