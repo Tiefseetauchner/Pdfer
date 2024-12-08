@@ -10,4 +10,5 @@ public interface IDocumentObjectSerializer<in T> : IDocumentObjectSerializer whe
 
 public interface IDocumentObjectSerializer
 {
+  Task Serialize(Stream stream, DocumentObject documentObject);
 }

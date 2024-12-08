@@ -7,7 +7,7 @@ public class PdfDictionary : Dictionary<NameObject, DocumentObject>
 {
   public DocumentObject this[string name]
   {
-    get => this.Single(x => x.Key.Value == name).Value;
+    get => this.Single(x => x.Key.Value == name || x.Key.Value == $"/{name}").Value;
     set => this[new NameObject(name)] = value;
   }
 

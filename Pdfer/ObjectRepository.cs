@@ -20,9 +20,11 @@ public class ObjectRepository(
     if (!xRefTable.TryGetValue(objectIdentifier, out var xRefEntry))
       return null;
 
+    Objects[objectIdentifier] = null!;
+
     var pdfObject = await pdfObjectReader.Read(stream, xRefEntry, this);
 
-    Objects.Add(objectIdentifier, pdfObject);
+    Objects[objectIdentifier] = pdfObject;
     return pdfObject as T;
   }
 }

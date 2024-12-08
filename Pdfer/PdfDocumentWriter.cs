@@ -61,18 +61,18 @@ public class PdfDocumentWriter(
     {
       var position = stream.Position;
       xRefTable.Add(key, new XRefEntry(position, XRefEntryType.Used));
-      await WriteObject(stream, value);
+      await WriteObject(stream, value, key);
       await stream.WriteAsync("\n\n"u8.ToArray());
     }
 
     return xRefTable;
   }
 
-  private async Task WriteObject(Stream stream, DocumentObject value)
+  private async Task WriteObject(Stream stream, DocumentObject value, ObjectIdentifier key)
   {
+    await stream.WriteAsync(key.GetHeaderBytes());
     await objectSerializerRepository.GetSerializer(value).Serialize(stream, value);
-
-    await stream.FlushAsync();
+    await stream.WriteAsync("\nendobj"u8.ToArray());
   }
 
   private long WriteXrefTable(Stream stream, XRefTable xRefTable)

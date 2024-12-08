@@ -7,6 +7,9 @@ namespace Pdfer.Objects;
 
 public class NumericObjectSerializer() : IDocumentObjectSerializer<NumericObject>
 {
+  async Task IDocumentObjectSerializer.Serialize(Stream stream, DocumentObject documentObject) =>
+    await Serialize(stream, (NumericObject)documentObject);
+
   public async Task Serialize(Stream stream, NumericObject documentObject)
   {
     switch (documentObject)

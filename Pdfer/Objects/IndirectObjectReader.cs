@@ -40,9 +40,9 @@ public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
 
     var objectIdentifier = new ObjectIdentifier(state.Number.Value, state.Generation.Value);
     var previousPosition = stream.Position;
-    var objectValue = await objectRepository.RetrieveObject<IndirectObject>(objectIdentifier, stream);
+    var objectValue = await objectRepository.RetrieveObject<DocumentObject>(objectIdentifier, stream);
     stream.Position = previousPosition;
-    return new IndirectObject(objectValue?.Value, objectIdentifier);
+    return new IndirectObject(objectValue, objectIdentifier);
   }
 
   private static void ReadObjectNumber(char nextChar, IndirectObjectReaderState state)

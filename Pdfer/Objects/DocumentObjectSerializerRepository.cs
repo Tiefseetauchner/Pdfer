@@ -7,9 +7,9 @@ public class DocumentObjectSerializerRepository : IDocumentObjectSerializerRepos
 {
   private readonly Dictionary<Type, IDocumentObjectSerializer> _serializers = [];
 
-  public IDocumentObjectSerializer<TObjectType> GetSerializer<TObjectType>(TObjectType documentObject) where TObjectType : DocumentObject =>
-    _serializers[documentObject.GetType()] as IDocumentObjectSerializer<TObjectType>
-    ?? throw new ArgumentException($"No serializer found for type {typeof(TObjectType)}");
+  public IDocumentObjectSerializer GetSerializer(DocumentObject documentObject) =>
+    _serializers[documentObject.GetType()]
+    ?? throw new ArgumentException($"No serializer found for type {documentObject.GetType()}");
 
   public IDocumentObjectSerializer<TObjectType> GetSerializer<TObjectType>() where TObjectType : DocumentObject =>
     _serializers[typeof(TObjectType)] as IDocumentObjectSerializer<TObjectType>

@@ -18,6 +18,6 @@ public class IndirectPdfObjectReaderAdapter(IPdfObjectReader adaptee, IStreamHel
 
     var documentObject = await adaptee.Read(stream, objectRepository);
 
-    return new IndirectObject(documentObject, objectIdentifier);
+    return documentObject;
   }
 }

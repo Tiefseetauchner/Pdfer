@@ -5,6 +5,9 @@ namespace Pdfer.Objects;
 
 public class StreamObjectSerializer(IDocumentObjectSerializerRepository objectSerializerRepository) : IDocumentObjectSerializer<StreamObject>
 {
+  async Task IDocumentObjectSerializer.Serialize(Stream stream, DocumentObject documentObject) =>
+    await Serialize(stream, (StreamObject)documentObject);
+
   public async Task Serialize(Stream stream, StreamObject documentObject)
   {
     await PdfDictionaryHelper.WriteDictionary(stream, documentObject.Dictionary.Value, objectSerializerRepository);

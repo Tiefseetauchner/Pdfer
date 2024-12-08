@@ -9,8 +9,7 @@ public class PdfObjectReader(
   IStreamHelper streamHelper,
   IDocumentObjectReaderRepository documentObjectReaderRepository) : IPdfObjectReader
 {
-  // TODO (lena): Deal with BooleanObjects
-  // TODO (lena): Deal with NullObjects
+  // TODO (lena): Deal with BooleanObject
   public async Task<DocumentObject> Read(Stream stream, ObjectRepository objectRepository)
   {
     var objectStartBuffer = new byte[2];
@@ -53,6 +52,12 @@ public class PdfObjectReader(
 
     if ((char)objectStartBuffer[0] == '/')
       return await documentObjectReaderRepository.GetReader<NameObject>().Read(stream, objectRepository);
+
+    if (objectStartBuffer[0] == 'n' && objectStartBuffer[1] == 'u')
+      return await documentObjectReaderRepository.GetReader<NullObject>().Read(stream, objectRepository);
+
+    if ((objectStartBuffer[0] == 't' && objectStartBuffer[1] == 'r') || (objectStartBuffer[0] == 'f' && objectStartBuffer[1] == 'a'))
+      return await documentObjectReaderRepository.GetReader<BooleanObject>().Read(stream, objectRepository);
 
     throw new NotImplementedException("The object type passed was not yet implemented.");
   }

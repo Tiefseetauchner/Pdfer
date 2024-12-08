@@ -21,9 +21,11 @@ public class PdfDocumentPartParserFactory : IPdfDocumentPartParserFactory
     var dictionaryObjectReader = new DictionaryObjectReader(pdfDictionaryHelper);
 
     documentObjectReaderRepository.AddReader(new ArrayObjectReader(streamHelper, pdfObjectReader));
+    documentObjectReaderRepository.AddReader(new BooleanObjectReader(streamHelper));
     documentObjectReaderRepository.AddReader(dictionaryObjectReader);
     documentObjectReaderRepository.AddReader(new IndirectObjectReader());
     documentObjectReaderRepository.AddReader(new NameObjectReader());
+    documentObjectReaderRepository.AddReader(new NullObjectReader());
     documentObjectReaderRepository.AddReader(new NumericObjectReader());
     documentObjectReaderRepository.AddReader(new StreamObjectReader(dictionaryObjectReader, streamHelper));
     documentObjectReaderRepository.AddReader(new StringObjectReader());
