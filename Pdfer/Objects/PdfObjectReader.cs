@@ -9,8 +9,7 @@ public class PdfObjectReader(
   IStreamHelper streamHelper,
   IDocumentObjectReaderRepository documentObjectReaderRepository) : IPdfObjectReader
 {
-  // TODO (lena): Deal with BooleanObject
-  public async Task<DocumentObject> Read(Stream stream, ObjectRepository objectRepository)
+  public async Task<DocumentObject> Read(Stream stream, IObjectRepository objectRepository)
   {
     var objectStartBuffer = new byte[2];
     var objectStart = await stream.ReadAsync(objectStartBuffer);
@@ -62,7 +61,7 @@ public class PdfObjectReader(
     throw new NotImplementedException("The object type passed was not yet implemented.");
   }
 
-  private async Task<DocumentObject> ParseNumericOrIndirectObject(Stream stream, ObjectRepository objectRepository)
+  private async Task<DocumentObject> ParseNumericOrIndirectObject(Stream stream, IObjectRepository objectRepository)
   {
     var oldPosition = stream.Position;
 
@@ -70,7 +69,7 @@ public class PdfObjectReader(
     {
       return await documentObjectReaderRepository.GetReader<IndirectObject>().Read(stream, objectRepository);
     }
-    catch (PdfParsingException parsingException) when (parsingException.Type == PdfParsingExceptionType.PdfInvalidIndirectObjectReference)
+    catch (PdfInvalidIndirectObjectReferenceParsingException)
     {
       stream.Position = oldPosition;
 

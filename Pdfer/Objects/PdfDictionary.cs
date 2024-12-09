@@ -5,6 +5,14 @@ namespace Pdfer.Objects;
 
 public class PdfDictionary : Dictionary<NameObject, DocumentObject>
 {
+  public PdfDictionary()
+  {
+  }
+
+  public PdfDictionary(Dictionary<NameObject, DocumentObject> dictionary) : base(dictionary)
+  {
+  }
+
   public DocumentObject this[string name]
   {
     get => this.Single(x => x.Key.Value == name || x.Key.Value == $"/{name}").Value;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Pdfer;
 
-public class PdfDocumentParser(PdfDocumentPartParser pdfDocumentPartParser)
+public class PdfDocumentParser(IPdfDocumentPartParser pdfDocumentPartParser) : IPdfDocumentParser
 {
   private const int HeaderLengthInBytes = 8;
   private const string HeaderBytes = "%PDF-";

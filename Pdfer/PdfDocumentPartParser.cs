@@ -10,7 +10,7 @@ namespace Pdfer;
 public class PdfDocumentPartParser(
   IStreamHelper streamHelper,
   IPdfDictionaryHelper pdfDictionaryHelper,
-  IIndirectPdfObjectReaderAdapter pdfObjectReader)
+  IIndirectPdfObjectReaderAdapter pdfObjectReader) : IPdfDocumentPartParser
 {
   public async Task<List<PdfDocumentPart>> Parse(Stream stream)
   {

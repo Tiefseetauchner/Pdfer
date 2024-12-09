@@ -6,10 +6,10 @@ namespace Pdfer.Objects;
 
 public class NullObjectReader : IDocumentObjectReader<NullObject>
 {
-  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, IObjectRepository objectRepository) =>
     await Read(stream, objectRepository);
 
-  public async Task<NullObject> Read(Stream stream, ObjectRepository objectRepository)
+  public async Task<NullObject> Read(Stream stream, IObjectRepository objectRepository)
   {
     var buffer = new byte[4];
 

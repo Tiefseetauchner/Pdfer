@@ -6,5 +6,5 @@ namespace Pdfer;
 
 public interface IPdfObjectReader
 {
-  Task<DocumentObject> Read(Stream stream, ObjectRepository objectRepository);
+  Task<DocumentObject> Read(Stream stream, IObjectRepository objectRepository);
 }

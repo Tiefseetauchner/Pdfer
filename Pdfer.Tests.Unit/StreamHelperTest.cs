@@ -36,4 +36,79 @@ public class StreamHelperTest
 
     Assert.That(bytesRead, Is.EqualTo("Hello "u8.ToArray()));
   }
+
+  [Test]
+  public void ReadChar_ShouldReturnChar()
+  {
+    var bytes = "Hello World\nLine2\r\nLine3"u8.ToArray();
+    using var stream = new MemoryStream(bytes);
+
+    var character = new StreamHelper().ReadChar(stream);
+
+    Assert.That(character, Is.EqualTo('H'));
+  }
+
+  [Test]
+  public void PeakChar_ShouldReturnChar()
+  {
+    var bytes = "Hello World\nLine2\r\nLine3"u8.ToArray();
+    using var stream = new MemoryStream(bytes);
+
+    var oldPosition = stream.Position;
+    var character = new StreamHelper().PeakChar(stream);
+
+    Assert.Multiple(() =>
+    {
+      Assert.That(character, Is.EqualTo('H'));
+      Assert.That(stream.Position, Is.EqualTo(oldPosition));
+    });
+  }
+
+  [Test]
+  public async Task Peak_ShouldReturnBytes()
+  {
+    var bytes = "Hello World\nLine2\r\nLine3"u8.ToArray();
+    using var stream = new MemoryStream(bytes);
+
+    var oldPosition = stream.Position;
+    var buffer = new byte[5];
+    var bytesRead = await new StreamHelper().Peak(stream, buffer);
+
+    Assert.Multiple(() =>
+    {
+      Assert.That(bytesRead, Is.EqualTo(5));
+      Assert.That(buffer, Is.EqualTo("Hello"u8.ToArray()));
+      Assert.That(stream.Position, Is.EqualTo(oldPosition));
+    });
+  }
+
+  [Test]
+  public async Task SkipWhiteSpaceCharacters_ShouldSkipWhiteSpaceCharacters()
+  {
+    var bytes = "   \t \r\n\n\r    \t\nLine2\r\nLine3"u8.ToArray();
+    using var stream = new MemoryStream(bytes);
+
+    var whiteSpaceCharacters = await new StreamHelper().SkipWhiteSpaceCharacters(stream);
+
+    Assert.Multiple(() =>
+    {
+      Assert.That(whiteSpaceCharacters, Is.EqualTo("   \t \r\n\n\r    \t\n"u8.ToArray()));
+      Assert.That(stream.Position, Is.EqualTo(15));
+    });
+  }
+
+  [Test]
+  public async Task SkipWhiteSpaceCharacters_NoWhiteSpaces_ShouldReturnEmpty()
+  {
+    var bytes = "Hello World\nLine2\r\nLine3"u8.ToArray();
+    using var stream = new MemoryStream(bytes);
+
+    var whiteSpaceCharacters = await new StreamHelper().SkipWhiteSpaceCharacters(stream);
+
+    Assert.Multiple(() =>
+    {
+      Assert.That(whiteSpaceCharacters, Is.Empty);
+      Assert.That(stream.Position, Is.EqualTo(0));
+    });
+  }
 }

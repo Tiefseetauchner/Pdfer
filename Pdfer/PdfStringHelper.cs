@@ -6,6 +6,7 @@ namespace Pdfer;
 
 public static class PdfStringHelper
 {
+  // TODO (lena.tauchner): Encode special characters
   public static string AsString(string input) =>
     $"({input})";
 

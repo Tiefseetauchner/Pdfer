@@ -6,10 +6,10 @@ namespace Pdfer.Objects;
 
 public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
 {
-  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, IObjectRepository objectRepository) =>
     await Read(stream, objectRepository);
 
-  public async Task<IndirectObject> Read(Stream stream, ObjectRepository objectRepository)
+  public async Task<IndirectObject> Read(Stream stream, IObjectRepository objectRepository)
   {
     var state = new IndirectObjectReaderState();
 
@@ -76,7 +76,7 @@ public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
   }
 
   private static Exception CreateInvalidReferenceException() =>
-    throw new PdfParsingException(PdfParsingExceptionType.PdfInvalidIndirectObjectReference, "Indirect object reference is not a valid reference.");
+    throw new PdfInvalidIndirectObjectReferenceParsingException("Indirect object reference is not a valid reference.");
 
   private class IndirectObjectReaderState
   {

@@ -8,10 +8,10 @@ public class StreamObjectReader(
   IDocumentObjectReader dictionaryObjectReader,
   IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
 {
-  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, IObjectRepository objectRepository) =>
     await Read(stream, objectRepository);
 
-  public async Task<StreamObject> Read(Stream stream, ObjectRepository objectRepository)
+  public async Task<StreamObject> Read(Stream stream, IObjectRepository objectRepository)
   {
     var dictionary = await dictionaryObjectReader.Read(stream, objectRepository);
 

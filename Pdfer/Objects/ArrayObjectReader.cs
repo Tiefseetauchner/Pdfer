@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects;
 
-public class ArrayObjectReader(IStreamHelper streamHelper, PdfObjectReader pdfObjectReader) : IDocumentObjectReader<ArrayObject>
+public class ArrayObjectReader(IStreamHelper streamHelper, IPdfObjectReader pdfObjectReader) : IDocumentObjectReader<ArrayObject>
 {
-  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, ObjectRepository objectRepository) =>
+  async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, IObjectRepository objectRepository) =>
     await Read(stream, objectRepository);
 
-  public async Task<ArrayObject> Read(Stream stream, ObjectRepository objectRepository)
+  public async Task<ArrayObject> Read(Stream stream, IObjectRepository objectRepository)
   {
     var objects = new List<DocumentObject>();
 
@@ -17,6 +17,8 @@ public class ArrayObjectReader(IStreamHelper streamHelper, PdfObjectReader pdfOb
 
     if (firstChar != '[')
       throw new IOException($"Could not parse array: Expected '[' but got '{firstChar}'");
+
+    await streamHelper.SkipWhiteSpaceCharacters(stream);
 
     while (streamHelper.PeakChar(stream) != ']')
     {

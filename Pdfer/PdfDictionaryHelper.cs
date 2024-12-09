@@ -9,7 +9,7 @@ public class PdfDictionaryHelper(
   IStreamHelper streamHelper,
   IPdfObjectReader pdfObjectReader) : IPdfDictionaryHelper
 {
-  public async Task<PdfDictionary> ReadDictionary(Stream stream, ObjectRepository objectRepository)
+  public async Task<PdfDictionary> ReadDictionary(Stream stream, IObjectRepository objectRepository)
   {
     var dictionary = new PdfDictionary();
 
