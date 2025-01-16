@@ -1,6 +1,6 @@
 ﻿using Moq;
 
-namespace Pdfer.Tests.Unit
+namespace Pdfer.Common.Tests
 {
   public static class MoqExtensions
   {

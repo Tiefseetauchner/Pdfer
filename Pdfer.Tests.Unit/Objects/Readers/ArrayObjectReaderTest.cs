@@ -1,5 +1,6 @@
 using Moq;
 using NUnit.Framework;
+using Pdfer.Common.Tests;
 using Pdfer.Objects;
 using Pdfer.Objects.ObjectReaders;
 using Pdfer.Objects.Readers;

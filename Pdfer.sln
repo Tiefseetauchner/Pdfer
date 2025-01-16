@@ -1,10 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pdfer", "Pdfer\Pdfer.csproj", "{E35DBC5E-6F1D-4247-AA37-058020894817}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pdfer.TestConsole", "Pdfer.TestConsole\Pdfer.TestConsole.csproj", "{130051DC-3C21-4898-8333-A22C6A267A6C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pdfer.Tests.Unit", "Pdfer.Tests.Unit\Pdfer.Tests.Unit.csproj", "{500D8851-9B0F-47A9-968E-170D1DB6368D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pdfer.Common.Tests", "Pdfer.Common.Tests\Pdfer.Common.Tests.csproj", "{A9009C93-CDC9-4119-9380-30C7AEEB956C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +29,12 @@ Global
 		{500D8851-9B0F-47A9-968E-170D1DB6368D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{500D8851-9B0F-47A9-968E-170D1DB6368D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{500D8851-9B0F-47A9-968E-170D1DB6368D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9009C93-CDC9-4119-9380-30C7AEEB956C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9009C93-CDC9-4119-9380-30C7AEEB956C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9009C93-CDC9-4119-9380-30C7AEEB956C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9009C93-CDC9-4119-9380-30C7AEEB956C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

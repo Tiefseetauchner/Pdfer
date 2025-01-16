@@ -5,5 +5,5 @@ namespace Pdfer.Objects;
 
 public interface IIndirectPdfObjectReader
 {
-  Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, ObjectRepository objectRepository);
+  Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, IObjectRepository objectRepository);
 }

@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Pdfer.Common.Tests;
 using Pdfer.Objects;
 using Pdfer.Objects.ObjectReaders;
 using System.IO;
