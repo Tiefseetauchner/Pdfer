@@ -22,8 +22,8 @@ public class StreamObjectReader(
     var length = lengthObject switch
     {
       IntegerObject integerObject => integerObject.Value,
-      IndirectObject indirectObject => (indirectObject.Value as IntegerObject)?.Value
-                                       ?? throw new InvalidOperationException($"Object referenced by key '/Length' of stream object was of type {indirectObject.Value?.GetType()} but expected {typeof(IntegerObject)}."),
+      ReferenceObject referenceObject => (referenceObject.Value as IntegerObject)?.Value
+                                       ?? throw new InvalidOperationException($"Object referenced by key '/Length' of stream object was of type {referenceObject.Value?.GetType()} but expected {typeof(IntegerObject)}."),
       _ => throw new InvalidOperationException($"Key '/Length' of stream object was of type {lengthObject.GetType()} but expected {typeof(IntegerObject)}.")
     };
     stream.Position = oldPosition;

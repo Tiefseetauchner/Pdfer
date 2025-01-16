@@ -40,7 +40,7 @@ public class PdfDocumentPartParser(
             currentXrefOffset = integerObjectOffset.Value;
             break;
 
-          case IndirectObject { Value: IntegerObject integerObjectOffset }:
+          case ReferenceObject { Value: IntegerObject integerObjectOffset }:
             hasNextPart = integerObjectOffset.Value != 0;
             currentXrefOffset = integerObjectOffset.Value;
             break;

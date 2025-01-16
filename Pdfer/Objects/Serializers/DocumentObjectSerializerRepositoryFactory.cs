@@ -9,7 +9,7 @@ public static class DocumentObjectSerializerRepositoryFactory
     repository.AddSerializer(new ArrayObjectSerializer(repository));
     repository.AddSerializer(new BooleanObjectSerializer());
     repository.AddSerializer(new DictionaryObjectSerializer(repository));
-    repository.AddSerializer(new IndirectObjectSerializer());
+    repository.AddSerializer(new ReferenceObjectSerializer());
     repository.AddSerializer(new NameObjectSerializer());
     repository.AddSerializer(new NullObjectSerializer());
     repository.AddSerializer<IntegerObject>(new NumericObjectSerializer());

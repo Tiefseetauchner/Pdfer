@@ -46,7 +46,7 @@ public class PdfObjectReader(
     }
 
     if (char.IsNumber((char)objectStartBuffer[0]) || objectStartBuffer[0] == '-')
-      return await ParseNumericOrIndirectObject(stream, objectRepository);
+      return await ParseNumericOrReferenceObject(stream, objectRepository);
 
     if ((char)objectStartBuffer[0] == '/')
       return await documentObjectReaderRepository.GetReader<NameObject>().Read(stream, objectRepository);
@@ -60,13 +60,13 @@ public class PdfObjectReader(
     throw new NotImplementedException("The object type passed was not yet implemented.");
   }
 
-  private async Task<DocumentObject> ParseNumericOrIndirectObject(Stream stream, IObjectRepository objectRepository)
+  private async Task<DocumentObject> ParseNumericOrReferenceObject(Stream stream, IObjectRepository objectRepository)
   {
     var oldPosition = stream.Position;
 
     try
     {
-      return await documentObjectReaderRepository.GetReader<IndirectObject>().Read(stream, objectRepository);
+      return await documentObjectReaderRepository.GetReader<ReferenceObject>().Read(stream, objectRepository);
     }
     catch (PdfInvalidIndirectObjectReferenceParsingException)
     {

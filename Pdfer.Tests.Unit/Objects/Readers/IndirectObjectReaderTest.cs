@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 namespace Pdfer.Tests.Unit.Objects.Readers;
 
 [TestFixture]
-public class IndirectObjectReaderTests
+public class ReferenceObjectReaderTests
 {
   private Mock<IObjectRepository> _objectRepository;
-  private IndirectObjectReader _indirectObjectReader;
+  private ReferenceObjectReader _reader;
 
   [SetUp]
   public void Setup()
   {
     _objectRepository = new Mock<IObjectRepository>();
-    _indirectObjectReader = new IndirectObjectReader();
+    _reader = new ReferenceObjectReader();
   }
 
   [Test]
@@ -30,7 +30,7 @@ public class IndirectObjectReaderTests
       .Setup(repo => repo.RetrieveObject<DocumentObject>(It.IsAny<ObjectIdentifier>(), It.IsAny<Stream>()))
       .ReturnsAsync(mockObject);
 
-    var result = await _indirectObjectReader.Read(stream, _objectRepository.Object);
+    var result = await _reader.Read(stream, _objectRepository.Object);
 
     Assert.Multiple(() =>
     {
@@ -45,7 +45,7 @@ public class IndirectObjectReaderTests
     using var stream = new MemoryStream("1 0 X"u8.ToArray());
 
     Assert.ThrowsAsync<PdfInvalidIndirectObjectReferenceParsingException>(
-      () => _indirectObjectReader.Read(stream, _objectRepository.Object));
+      () => _reader.Read(stream, _objectRepository.Object));
   }
 
   [Test]
@@ -54,7 +54,7 @@ public class IndirectObjectReaderTests
     using var stream = new MemoryStream("1 0"u8.ToArray());
 
     Assert.ThrowsAsync<PdfInvalidIndirectObjectReferenceParsingException>(
-      () => _indirectObjectReader.Read(stream, _objectRepository.Object));
+      () => _reader.Read(stream, _objectRepository.Object));
   }
 
   [Test]
@@ -63,7 +63,7 @@ public class IndirectObjectReaderTests
     using var stream = new MemoryStream("a 0 R"u8.ToArray());
 
     Assert.ThrowsAsync<PdfInvalidIndirectObjectReferenceParsingException>(
-      () => _indirectObjectReader.Read(stream, _objectRepository.Object));
+      () => _reader.Read(stream, _objectRepository.Object));
   }
 
   [Test]
@@ -72,6 +72,6 @@ public class IndirectObjectReaderTests
     using var stream = new MemoryStream("1 a R"u8.ToArray());
 
     Assert.ThrowsAsync<PdfInvalidIndirectObjectReferenceParsingException>(
-      () => _indirectObjectReader.Read(stream, _objectRepository.Object));
+      () => _reader.Read(stream, _objectRepository.Object));
   }
 }

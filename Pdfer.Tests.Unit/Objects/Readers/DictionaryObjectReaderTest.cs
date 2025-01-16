@@ -190,7 +190,7 @@ public class DictionaryObjectReaderTest
     {
       Assert.That(arrayObjectResult.Value, Has.Count.EqualTo(1));
 
-      TypeAssert.VerifyInstanceOf<IndirectObject>(arrayObjectResult.Value["IndirectObject"], _ =>
+      TypeAssert.VerifyInstanceOf<ReferenceObject>(arrayObjectResult.Value["IndirectObject"], _ =>
       {
         Assert.That(_.ObjectIdentifier, Is.EqualTo(new ObjectIdentifier(1, 0)));
         Assert.That(_.Value, Is.SameAs(indirectObjectValue));

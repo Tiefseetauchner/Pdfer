@@ -17,7 +17,7 @@ public static class PdfObjectReaderFactory
     documentObjectReaderRepository.AddReader(new ArrayObjectReader(pdfObjectReader));
     documentObjectReaderRepository.AddReader(new BooleanObjectReader());
     documentObjectReaderRepository.AddReader(dictionaryObjectReader);
-    documentObjectReaderRepository.AddReader(new IndirectObjectReader());
+    documentObjectReaderRepository.AddReader(new ReferenceObjectReader());
     documentObjectReaderRepository.AddReader(new NameObjectReader());
     documentObjectReaderRepository.AddReader(new NullObjectReader());
     documentObjectReaderRepository.AddReader(new NumericObjectReader());

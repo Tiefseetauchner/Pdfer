@@ -30,9 +30,9 @@ public class ArrayObjectReaderTest
 
     using var stream = new MemoryStream(arrayObject);
 
-    var indirectObjectValue = new IntegerObject(1234);
+    var referenceObjectValue = new IntegerObject(1234);
     _objectRepository.Setup(x => x.RetrieveObject<DocumentObject>(It.IsAny<ObjectIdentifier>(), It.IsAny<Stream>()))
-      .ReturnsAsync(indirectObjectValue)
+      .ReturnsAsync(referenceObjectValue)
       .Verifiable();
 
     var arrayObjectResult = await _arrayObjectReader.Read(stream, _objectRepository.Object);
@@ -42,10 +42,10 @@ public class ArrayObjectReaderTest
     {
       TypeAssert.VerifyInstanceOf<IntegerObject>(arrayObjectResult.Value[i++], _ => Assert.That(_.Value, Is.EqualTo(100)));
 
-      TypeAssert.VerifyInstanceOf<IndirectObject>(arrayObjectResult.Value[i++], _ =>
+      TypeAssert.VerifyInstanceOf<ReferenceObject>(arrayObjectResult.Value[i++], _ =>
       {
         Assert.That(_.ObjectIdentifier, Is.EqualTo(new ObjectIdentifier(3, 0)));
-        Assert.That(_.Value, Is.SameAs(indirectObjectValue));
+        Assert.That(_.Value, Is.SameAs(referenceObjectValue));
       });
 
       TypeAssert.VerifyInstanceOf<ArrayObject>(arrayObjectResult.Value[i++], _ =>
@@ -76,14 +76,14 @@ public class ArrayObjectReaderTest
   }
 
   [Test]
-  public async Task Read_IndirectObject_CallsObjectRepository()
+  public async Task Read_ReferenceObject_CallsObjectRepository()
   {
     var arrayObject = "[ 1 0 R ]"u8.ToArray();
     using var stream = new MemoryStream(arrayObject);
 
-    var indirectObjectValue = new IntegerObject(1234);
+    var referenceObjectValue = new IntegerObject(1234);
     _objectRepository.Setup(_ => _.RetrieveObject<DocumentObject>(It.IsAny<ObjectIdentifier>(), It.IsAny<Stream>()))
-      .ReturnsAsync(indirectObjectValue)
+      .ReturnsAsync(referenceObjectValue)
       .Verifiable();
 
     var arrayObjectResult = await _arrayObjectReader.Read(stream, _objectRepository.Object);
@@ -92,10 +92,10 @@ public class ArrayObjectReaderTest
     {
       Assert.That(arrayObjectResult.Value, Has.Length.EqualTo(1));
 
-      TypeAssert.VerifyInstanceOf<IndirectObject>(arrayObjectResult.Value[0], _ =>
+      TypeAssert.VerifyInstanceOf<ReferenceObject>(arrayObjectResult.Value[0], _ =>
       {
         Assert.That(_.ObjectIdentifier, Is.EqualTo(new ObjectIdentifier(1, 0)));
-        Assert.That(_.Value, Is.SameAs(indirectObjectValue));
+        Assert.That(_.Value, Is.SameAs(referenceObjectValue));
       });
     });
 

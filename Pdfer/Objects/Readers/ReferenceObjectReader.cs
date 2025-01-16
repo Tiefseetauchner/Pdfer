@@ -4,14 +4,14 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects.ObjectReaders;
 
-public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
+public class ReferenceObjectReader : IDocumentObjectReader<ReferenceObject>
 {
   async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, IObjectRepository objectRepository) =>
     await Read(stream, objectRepository);
 
-  public async Task<IndirectObject> Read(Stream stream, IObjectRepository objectRepository)
+  public async Task<ReferenceObject> Read(Stream stream, IObjectRepository objectRepository)
   {
-    var state = new IndirectObjectReaderState();
+    var state = new ReferenceObjectReaderState();
 
     char nextChar = default;
     while (await stream.ReadAsync(state.Buffer) > 0)
@@ -44,10 +44,10 @@ public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
     var previousPosition = stream.Position;
     var objectValue = await objectRepository.RetrieveObject<DocumentObject>(objectIdentifier, stream);
     stream.Position = previousPosition;
-    return new IndirectObject(objectValue, objectIdentifier);
+    return new ReferenceObject(objectValue, objectIdentifier);
   }
 
-  private static void ReadObjectNumber(char nextChar, char prevChar, IndirectObjectReaderState state)
+  private static void ReadObjectNumber(char nextChar, char prevChar, ReferenceObjectReaderState state)
   {
     if (char.IsNumber(nextChar))
     {
@@ -62,7 +62,7 @@ public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
     state.ReadingGeneration = true;
   }
 
-  private static void ReadObjectGeneration(char nextChar, char prevChar, IndirectObjectReaderState state)
+  private static void ReadObjectGeneration(char nextChar, char prevChar, ReferenceObjectReaderState state)
   {
     if (char.IsNumber(nextChar))
     {
@@ -80,7 +80,7 @@ public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
   private static Exception CreateInvalidReferenceException() =>
     throw new PdfInvalidIndirectObjectReferenceParsingException("Indirect object reference is not a valid reference.");
 
-  private class IndirectObjectReaderState
+  private class ReferenceObjectReaderState
   {
     public byte[] Buffer { get; } = new byte[1];
     public bool ReadingNumber { get; set; } = true;

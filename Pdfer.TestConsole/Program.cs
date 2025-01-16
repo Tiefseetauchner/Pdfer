@@ -15,7 +15,7 @@ internal class Program
 
     var infoDictionary = pdfDocument.DocumentParts[0].Trailer.TrailerDictionary["Info"] switch
     {
-      IndirectObject indirectObject => pdfDocument.DocumentParts[0].Body[indirectObject.ObjectIdentifier] as DictionaryObject
+      ReferenceObject referenceObject => pdfDocument.DocumentParts[0].Body[referenceObject.ObjectIdentifier] as DictionaryObject
                                        ?? throw new InvalidOperationException("Info dictionary not found"),
       DictionaryObject dictionaryObject => dictionaryObject,
       _ => throw new InvalidOperationException("Info dictionary not found")
