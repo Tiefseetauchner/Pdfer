@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pdfer.Tests.Unit.Objects;
+namespace Pdfer.Tests.Unit.Objects.Readers;
 
 [TestFixture]
 public class StringObjectReaderTests

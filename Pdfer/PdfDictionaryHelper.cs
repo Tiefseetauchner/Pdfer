@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 namespace Pdfer;
 
 public class PdfDictionaryHelper(
-  IStreamHelper streamHelper,
   IPdfObjectReader pdfObjectReader) : IPdfDictionaryHelper
 {
   public async Task<PdfDictionary> ReadDictionary(Stream stream, IObjectRepository objectRepository)
@@ -20,9 +19,9 @@ public class PdfDictionaryHelper(
     if (await stream.ReadAsync(buffer) != 2 || buffer[0] != '<' || buffer[1] != '<')
       throw new InvalidOperationException("Dictionary does not start with '<<'");
 
-    await streamHelper.SkipWhiteSpaceCharacters(stream);
+    await StreamHelper.SkipWhiteSpaceCharacters(stream);
 
-    while (await streamHelper.Peak(stream, buffer) == 2 && !(buffer[0] == '>' && buffer[1] == '>'))
+    while (await StreamHelper.Peak(stream, buffer) == 2 && !(buffer[0] == '>' && buffer[1] == '>'))
     {
       var nextObject = await pdfObjectReader.Read(stream, objectRepository);
 
@@ -39,7 +38,7 @@ public class PdfDictionaryHelper(
         key = null;
       }
 
-      await streamHelper.SkipWhiteSpaceCharacters(stream);
+      await StreamHelper.SkipWhiteSpaceCharacters(stream);
     }
 
     // NOTE: We have to skip the closing '>>' character here.

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects.ObjectReaders;
 
-public class ArrayObjectReader(IStreamHelper streamHelper, IPdfObjectReader pdfObjectReader) : IDocumentObjectReader<ArrayObject>
+public class ArrayObjectReader(IPdfObjectReader pdfObjectReader) : IDocumentObjectReader<ArrayObject>
 {
   async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, IObjectRepository objectRepository) =>
     await Read(stream, objectRepository);
@@ -13,22 +13,22 @@ public class ArrayObjectReader(IStreamHelper streamHelper, IPdfObjectReader pdfO
   {
     var objects = new List<DocumentObject>();
 
-    var firstChar = streamHelper.ReadChar(stream);
+    var firstChar = StreamHelper.ReadChar(stream);
 
     if (firstChar != '[')
       throw new IOException($"Could not parse array: Expected '[' but got '{firstChar}'");
 
-    await streamHelper.SkipWhiteSpaceCharacters(stream);
+    await StreamHelper.SkipWhiteSpaceCharacters(stream);
 
-    while (streamHelper.PeakChar(stream) != ']')
+    while (StreamHelper.PeakChar(stream) != ']')
     {
-      await streamHelper.SkipWhiteSpaceCharacters(stream);
+      await StreamHelper.SkipWhiteSpaceCharacters(stream);
       objects.Add(await pdfObjectReader.Read(stream, objectRepository));
-      await streamHelper.SkipWhiteSpaceCharacters(stream);
+      await StreamHelper.SkipWhiteSpaceCharacters(stream);
     }
 
     // NOTE: We have to skip the closing ']' character here.
-    streamHelper.ReadChar(stream);
+    StreamHelper.ReadChar(stream);
 
     return new ArrayObject(objects.ToArray());
   }

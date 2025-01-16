@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 namespace Pdfer.Objects.ObjectReaders;
 
 public class PdfObjectReader(
-  IStreamHelper streamHelper,
   IDocumentObjectReaderRepository documentObjectReaderRepository) : IPdfObjectReader
 {
   public async Task<DocumentObject> Read(Stream stream, IObjectRepository objectRepository)
@@ -31,9 +30,9 @@ public class PdfObjectReader(
         objectStartBuffer[1] == '<')
     {
       // IMPROVE (lena): This is not a good way to check if it is a stream. We're reading the whole dictionary twice.
-      await new PdfDictionaryHelper(streamHelper, this).ReadDictionary(stream, objectRepository);
+      await new PdfDictionaryHelper(this).ReadDictionary(stream, objectRepository);
 
-      await streamHelper.SkipWhiteSpaceCharacters(stream);
+      await StreamHelper.SkipWhiteSpaceCharacters(stream);
 
       var buffer = new byte[7];
       _ = await stream.ReadAsync(buffer);

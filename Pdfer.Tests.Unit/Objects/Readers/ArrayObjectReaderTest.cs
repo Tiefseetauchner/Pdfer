@@ -6,7 +6,7 @@ using Pdfer.Objects.Readers;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pdfer.Tests.Unit.Objects;
+namespace Pdfer.Tests.Unit.Objects.Readers;
 
 public class ArrayObjectReaderTest
 {
@@ -20,7 +20,6 @@ public class ArrayObjectReaderTest
     var pdfObjectReader = PdfObjectReaderFactory.Create();
 
     _arrayObjectReader = new ArrayObjectReader(
-      new StreamHelper(),
       pdfObjectReader);
   }
 

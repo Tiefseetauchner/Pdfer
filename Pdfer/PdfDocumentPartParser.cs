@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 namespace Pdfer;
 
 public class PdfDocumentPartParser(
-  IStreamHelper streamHelper,
   IPdfDictionaryHelper pdfDictionaryHelper,
   IIndirectPdfObjectReaderAdapter pdfObjectReader) : IPdfDocumentPartParser
 {
@@ -81,7 +80,7 @@ public class PdfDocumentPartParser(
     var eofFound = false;
     while (!eofFound)
     {
-      var line = await streamHelper.ReadReverseLine(streamReader);
+      var line = await StreamHelper.ReadReverseLine(streamReader);
 
       if (string.IsNullOrWhiteSpace(line))
         continue;
@@ -95,7 +94,7 @@ public class PdfDocumentPartParser(
 
   private async Task<long> GetXrefOffset(StreamReader streamReader)
   {
-    var xrefOffsetString = await streamHelper.ReadReverseLine(streamReader);
+    var xrefOffsetString = await StreamHelper.ReadReverseLine(streamReader);
     var xrefOffsetParsed = long.TryParse(xrefOffsetString, out var xrefOffset);
     if (!xrefOffsetParsed)
       throw new InvalidOperationException("xref offset is not a number");
@@ -104,7 +103,7 @@ public class PdfDocumentPartParser(
 
   private async Task VerifyStartxrefExists(StreamReader streamReader)
   {
-    var startXref = await streamHelper.ReadReverseLine(streamReader);
+    var startXref = await StreamHelper.ReadReverseLine(streamReader);
 
     if (startXref != "startxref")
       throw new InvalidOperationException("No 'startxref' keyword found");
@@ -170,8 +169,8 @@ public class PdfDocumentPartParser(
 
   private async Task<PdfDictionary> GetTrailerDictionary(Stream stream, ObjectRepository objectRepository)
   {
-    await streamHelper.ReadStreamTo("trailer", stream);
-    await streamHelper.ReadStreamTo("\n", stream);
+    await StreamHelper.ReadStreamTo("trailer", stream);
+    await StreamHelper.ReadStreamTo("\n", stream);
 
     return await pdfDictionaryHelper.ReadDictionary(stream, objectRepository);
   }

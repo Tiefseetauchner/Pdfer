@@ -4,14 +4,14 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects.ObjectReaders;
 
-public class BooleanObjectReader(IStreamHelper streamHelper) : IDocumentObjectReader<BooleanObject>
+public class BooleanObjectReader : IDocumentObjectReader<BooleanObject>
 {
   async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, IObjectRepository objectRepository) =>
     await Read(stream, objectRepository);
 
   public async Task<BooleanObject> Read(Stream stream, IObjectRepository objectRepository)
   {
-    var firstChar = streamHelper.ReadChar(stream);
+    var firstChar = StreamHelper.ReadChar(stream);
 
     switch (firstChar)
     {

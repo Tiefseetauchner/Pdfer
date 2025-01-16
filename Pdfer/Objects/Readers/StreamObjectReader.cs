@@ -5,8 +5,7 @@ using System.Threading.Tasks;
 namespace Pdfer.Objects.ObjectReaders;
 
 public class StreamObjectReader(
-  IDocumentObjectReader dictionaryObjectReader,
-  IStreamHelper streamHelper) : IDocumentObjectReader<StreamObject>
+  IDocumentObjectReader dictionaryObjectReader) : IDocumentObjectReader<StreamObject>
 {
   async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, IObjectRepository objectRepository) =>
     await Read(stream, objectRepository);
@@ -29,8 +28,8 @@ public class StreamObjectReader(
     };
     stream.Position = oldPosition;
 
-    await streamHelper.ReadStreamTo("stream", stream);
-    await streamHelper.SkipWhiteSpaceCharacters(stream);
+    await StreamHelper.ReadStreamTo("stream", stream);
+    await StreamHelper.SkipWhiteSpaceCharacters(stream);
 
     var buffer = new byte[length];
     var bytesRead = await stream.ReadAsync(buffer);

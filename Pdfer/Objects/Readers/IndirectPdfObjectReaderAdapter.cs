@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects.ObjectReaders;
 
-public class IndirectPdfObjectReaderAdapter(IPdfObjectReader adaptee, IStreamHelper streamHelper) : IIndirectPdfObjectReaderAdapter
+public class IndirectPdfObjectReaderAdapter(IPdfObjectReader adaptee) : IIndirectPdfObjectReaderAdapter
 {
   public async Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, ObjectRepository objectRepository)
   {
     stream.Position = xRefEntry.Position;
 
-    var objectIdentifierString = Encoding.Default.GetString(await streamHelper.ReadStreamTo("\n", stream));
+    var objectIdentifierString = Encoding.Default.GetString(await StreamHelper.ReadStreamTo("\n", stream));
 
     if (!ObjectIdentifier.TryParseIdentifier(objectIdentifierString, out var objectIdentifier))
       throw new InvalidOperationException("Indirect object did not start with an object identifier.");

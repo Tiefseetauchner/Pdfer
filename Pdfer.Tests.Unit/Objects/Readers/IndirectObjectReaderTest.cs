@@ -5,7 +5,7 @@ using Pdfer.Objects.ObjectReaders;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pdfer.Tests.Unit.Objects;
+namespace Pdfer.Tests.Unit.Objects.Readers;
 
 [TestFixture]
 public class IndirectObjectReaderTests

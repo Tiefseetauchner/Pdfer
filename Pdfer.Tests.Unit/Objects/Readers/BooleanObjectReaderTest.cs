@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pdfer.Tests.Unit.Objects;
+namespace Pdfer.Tests.Unit.Objects.Readers;
 
 public class BooleanObjectReaderTest
 {
@@ -14,7 +14,7 @@ public class BooleanObjectReaderTest
   {
     using var stream = new MemoryStream("true"u8.ToArray());
 
-    var reader = new BooleanObjectReader(new StreamHelper());
+    var reader = new BooleanObjectReader();
 
     var result = await reader.Read(stream, null!);
 
@@ -26,7 +26,7 @@ public class BooleanObjectReaderTest
   {
     using var stream = new MemoryStream("false"u8.ToArray());
 
-    var reader = new BooleanObjectReader(new StreamHelper());
+    var reader = new BooleanObjectReader();
 
     var result = await reader.Read(stream, null!);
 
@@ -42,7 +42,7 @@ public class BooleanObjectReaderTest
   {
     using var stream = new MemoryStream(Encoding.Default.GetBytes(value));
 
-    var reader = new BooleanObjectReader(new StreamHelper());
+    var reader = new BooleanObjectReader();
 
     var exception = Assert.ThrowsAsync<PdfInvalidBooleanValueParsingException>(() => reader.Read(stream, null!));
 

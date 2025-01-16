@@ -7,18 +7,14 @@ public class PdfDocumentPartParserFactory : IPdfDocumentPartParserFactory
 {
   public IPdfDocumentPartParser Create()
   {
-    var streamHelper = new StreamHelper();
-
     var pdfObjectReader = PdfObjectReaderFactory.Create();
 
     var indirectPdfObjectReaderAdapter = new IndirectPdfObjectReaderAdapter(
-      pdfObjectReader,
-      streamHelper);
+      pdfObjectReader);
 
-    var pdfDictionaryHelper = new PdfDictionaryHelper(streamHelper, pdfObjectReader);
+    var pdfDictionaryHelper = new PdfDictionaryHelper(pdfObjectReader);
 
     return new PdfDocumentPartParser(
-      streamHelper,
       pdfDictionaryHelper,
       indirectPdfObjectReaderAdapter);
   }

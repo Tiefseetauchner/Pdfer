@@ -15,9 +15,9 @@ public class StreamHelperTest
     reverseStream.Position = 0;
     using var streamReader = new StreamReader(reverseStream);
 
-    var line3 = await new StreamHelper().ReadReverseLine(streamReader);
-    var line2 = await new StreamHelper().ReadReverseLine(streamReader);
-    var line1 = await new StreamHelper().ReadReverseLine(streamReader);
+    var line3 = await StreamHelper.ReadReverseLine(streamReader);
+    var line2 = await StreamHelper.ReadReverseLine(streamReader);
+    var line1 = await StreamHelper.ReadReverseLine(streamReader);
 
     Assert.Multiple(() =>
     {
@@ -32,7 +32,7 @@ public class StreamHelperTest
   {
     var bytes = "Hello World\nLine2\r\nLine3"u8.ToArray();
     using var stream = new MemoryStream(bytes);
-    var bytesRead = await new StreamHelper().ReadStreamTo("World", stream);
+    var bytesRead = await StreamHelper.ReadStreamTo("World", stream);
 
     Assert.That(bytesRead, Is.EqualTo("Hello "u8.ToArray()));
   }
@@ -43,7 +43,7 @@ public class StreamHelperTest
     var bytes = "Hello World\nLine2\r\nLine3"u8.ToArray();
     using var stream = new MemoryStream(bytes);
 
-    var character = new StreamHelper().ReadChar(stream);
+    var character = StreamHelper.ReadChar(stream);
 
     Assert.That(character, Is.EqualTo('H'));
   }
@@ -55,7 +55,7 @@ public class StreamHelperTest
     using var stream = new MemoryStream(bytes);
 
     var oldPosition = stream.Position;
-    var character = new StreamHelper().PeakChar(stream);
+    var character = StreamHelper.PeakChar(stream);
 
     Assert.Multiple(() =>
     {
@@ -72,7 +72,7 @@ public class StreamHelperTest
 
     var oldPosition = stream.Position;
     var buffer = new byte[5];
-    var bytesRead = await new StreamHelper().Peak(stream, buffer);
+    var bytesRead = await StreamHelper.Peak(stream, buffer);
 
     Assert.Multiple(() =>
     {
@@ -88,7 +88,7 @@ public class StreamHelperTest
     var bytes = "   \t \r\n\n\r    \t\nLine2\r\nLine3"u8.ToArray();
     using var stream = new MemoryStream(bytes);
 
-    var whiteSpaceCharacters = await new StreamHelper().SkipWhiteSpaceCharacters(stream);
+    var whiteSpaceCharacters = await StreamHelper.SkipWhiteSpaceCharacters(stream);
 
     Assert.Multiple(() =>
     {
@@ -103,7 +103,7 @@ public class StreamHelperTest
     var bytes = "Hello World\nLine2\r\nLine3"u8.ToArray();
     using var stream = new MemoryStream(bytes);
 
-    var whiteSpaceCharacters = await new StreamHelper().SkipWhiteSpaceCharacters(stream);
+    var whiteSpaceCharacters = await StreamHelper.SkipWhiteSpaceCharacters(stream);
 
     Assert.Multiple(() =>
     {

@@ -6,7 +6,7 @@ using Pdfer.Objects.Readers;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pdfer.Tests.Unit.Objects;
+namespace Pdfer.Tests.Unit.Objects.Readers;
 
 public class DictionaryObjectReaderTest
 {
@@ -23,7 +23,6 @@ public class DictionaryObjectReaderTest
 
     _dictionaryObjectReader = new DictionaryObjectReader(
       new PdfDictionaryHelper(
-        new StreamHelper(),
         pdfObjectReader));
   }
 
