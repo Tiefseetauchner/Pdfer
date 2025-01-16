@@ -23,7 +23,7 @@ public class NameObjectReader : IDocumentObjectReader<NameObject>
     {
       // TODO (lena.tauchner): Decode #XX
 
-      if (nextByte[0] == '/' || char.IsWhiteSpace((char)nextByte[0]) || nextByte[0] == '(' || nextByte[0] == '[' || nextByte[0] == '<' || nextByte[0] == '>' || nextByte[0] == ')' || nextByte[0] == ']')
+      if (PdfCharacterHelper.IsDelimitingCharacter((char)nextByte[0]))
         break;
 
       name.Append((char)nextByte[0]);
