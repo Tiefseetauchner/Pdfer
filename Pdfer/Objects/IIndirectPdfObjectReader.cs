@@ -1,7 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects.ObjectReaders;
+namespace Pdfer.Objects;
 
 public interface IIndirectPdfObjectReader
 {
