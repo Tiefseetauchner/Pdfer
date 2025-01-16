@@ -1,24 +1,16 @@
-version
-mode: Mainline
-tag-prefix: 'release/'
+# NOTE: see https://gitversion.net/docs/reference/modes/mainline for information on how this works
+# NOTE: see https://gitversion.net/docs/reference/version-increments for information on how to manually influence version numbers (major and minor should be set)
+#  use a commit message of '+semver:breaking' or '+semver:major' to raise major
+#  use a commit message of '+semver:feature'  or '+semver:minor' to raise minor
+assembly-versioning-scheme: MajorMinorPatch
+mode: ManualDeployment
 branches:
   main:
-    regex: ^main$
-    is-main-branch: true
-    tag: ''
+    label: ''
     increment: Patch
     mode: ContinuousDeployment
   feature:
-    regex: ^feature[/-]
-    tag: 'ALPHA'
+    label: 'ALPHA'
     increment: Patch
-  bugfix:
-    regex: ^bugfix[/-]
-    tag: 'ALPHA'
-    increment: Patch
-ignore:
-  sha: []
+update-build-number: true
 commit-message-incrementing: Enabled
-assembly-versioning-scheme: MajorMinorPatch
-assembly-file-versioning-scheme: MajorMinorPatch
-assembly-informational-format: '{Major}.{Minor}.{Patch}-{PreReleaseLabel}'
