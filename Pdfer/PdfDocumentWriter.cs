@@ -1,10 +1,11 @@
+using Pdfer.Objects;
+using Pdfer.Objects.Serializers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Pdfer.Objects;
 
 namespace Pdfer;
 
@@ -94,7 +95,6 @@ public class PdfDocumentWriter(
         xRefTableSection.Clear();
         firstObjectNumberInSection = identifier.ObjectNumber;
       }
-
 
       var flagCharacter = xRefEntry.Flag == XRefEntryType.Free ? 'f' : 'n';
 

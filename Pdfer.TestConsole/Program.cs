@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Pdfer.Objects;
+using System;
 using System.IO;
 using System.Threading.Tasks;
-using Pdfer.Objects;
 
 namespace Pdfer.TestConsole;
 
-class Program
+internal class Program
 {
-  static async Task Main(string[] args)
+  private static async Task Main(string[] args)
   {
     Console.WriteLine("Hello Pdfer!");
 

@@ -1,4 +1,5 @@
-using Pdfer.Objects;
+using Pdfer.Objects.ObjectReaders;
+using Pdfer.Objects.Readers;
 
 namespace Pdfer;
 

@@ -1,7 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects;
+namespace Pdfer.Objects.ObjectReaders;
 
 public interface IDocumentObjectReader<T> : IDocumentObjectReader
   where T : DocumentObject

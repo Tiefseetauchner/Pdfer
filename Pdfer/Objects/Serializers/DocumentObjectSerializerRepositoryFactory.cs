@@ -1,4 +1,4 @@
-﻿namespace Pdfer.Objects;
+﻿namespace Pdfer.Objects.Serializers;
 
 public static class DocumentObjectSerializerRepositoryFactory
 {

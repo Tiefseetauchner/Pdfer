@@ -11,7 +11,6 @@ public class PdfDocumentParser(IPdfDocumentPartParser pdfDocumentPartParser) : I
   private const int HeaderLengthInBytes = 8;
   private const string HeaderBytes = "%PDF-";
 
-
   public async Task<PdfDocument> Parse(byte[] bytes)
   {
     using var stream = new MemoryStream(bytes);

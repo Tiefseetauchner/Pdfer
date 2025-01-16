@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects;
+namespace Pdfer.Objects.ObjectReaders;
 
 public class IndirectPdfObjectReaderAdapter(IPdfObjectReader adaptee, IStreamHelper streamHelper) : IIndirectPdfObjectReaderAdapter
 {

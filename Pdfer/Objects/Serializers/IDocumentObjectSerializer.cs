@@ -1,7 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects;
+namespace Pdfer.Objects.Serializers;
 
 public interface IDocumentObjectSerializer<in T> : IDocumentObjectSerializer where T : DocumentObject
 {

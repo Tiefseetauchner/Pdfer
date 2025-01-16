@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Pdfer.Objects;
+using Pdfer.Objects.ObjectReaders;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;

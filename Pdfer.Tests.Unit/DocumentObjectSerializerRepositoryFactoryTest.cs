@@ -1,5 +1,5 @@
 using NUnit.Framework;
-using Pdfer.Objects;
+using Pdfer.Objects.Serializers;
 
 namespace Pdfer.Tests.Unit;
 

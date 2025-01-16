@@ -58,7 +58,6 @@ public record ObjectIdentifier(
   public byte[] GetHeaderBytes() =>
     Encoding.UTF8.GetBytes(GetHeaderString());
 
-
   private string GetHeaderString() =>
     $"{ObjectNumber} {Generation} obj\n";
 

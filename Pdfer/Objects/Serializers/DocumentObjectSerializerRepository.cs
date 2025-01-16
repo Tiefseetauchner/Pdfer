@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Pdfer.Objects;
+namespace Pdfer.Objects.Serializers;
 
 public class DocumentObjectSerializerRepository : IDocumentObjectSerializerRepository
 {

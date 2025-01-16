@@ -1,7 +1,8 @@
+using Pdfer.Objects;
+using Pdfer.Objects.Serializers;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Pdfer.Objects;
 
 namespace Pdfer;
 

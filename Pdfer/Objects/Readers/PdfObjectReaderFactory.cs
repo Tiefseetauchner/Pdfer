@@ -1,6 +1,6 @@
-using Pdfer.Objects;
+using Pdfer.Objects.ObjectReaders;
 
-namespace Pdfer;
+namespace Pdfer.Objects.Readers;
 
 public static class PdfObjectReaderFactory
 {

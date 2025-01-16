@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects;
+namespace Pdfer.Objects.ObjectReaders;
 
 public class ArrayObjectReader(IStreamHelper streamHelper, IPdfObjectReader pdfObjectReader) : IDocumentObjectReader<ArrayObject>
 {

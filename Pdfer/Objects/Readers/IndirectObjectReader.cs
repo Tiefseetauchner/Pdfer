@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects;
+namespace Pdfer.Objects.ObjectReaders;
 
 public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
 {
@@ -13,19 +13,21 @@ public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
   {
     var state = new IndirectObjectReaderState();
 
+    char nextChar = default;
     while (await stream.ReadAsync(state.Buffer) > 0)
     {
-      var nextChar = (char)state.Buffer[0];
+      var prevChar = nextChar;
+      nextChar = (char)state.Buffer[0];
 
       if (state.ReadingNumber)
       {
-        ReadObjectNumber(nextChar, state);
+        ReadObjectNumber(nextChar, prevChar, state);
         continue;
       }
 
       if (state.ReadingGeneration)
       {
-        ReadObjectGeneration(nextChar, state);
+        ReadObjectGeneration(nextChar, prevChar, state);
         continue;
       }
 
@@ -45,7 +47,7 @@ public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
     return new IndirectObject(objectValue, objectIdentifier);
   }
 
-  private static void ReadObjectNumber(char nextChar, IndirectObjectReaderState state)
+  private static void ReadObjectNumber(char nextChar, char prevChar, IndirectObjectReaderState state)
   {
     if (char.IsNumber(nextChar))
     {
@@ -60,7 +62,7 @@ public class IndirectObjectReader : IDocumentObjectReader<IndirectObject>
     state.ReadingGeneration = true;
   }
 
-  private static void ReadObjectGeneration(char nextChar, IndirectObjectReaderState state)
+  private static void ReadObjectGeneration(char nextChar, char prevChar, IndirectObjectReaderState state)
   {
     if (char.IsNumber(nextChar))
     {

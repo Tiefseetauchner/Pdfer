@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects;
+namespace Pdfer.Objects.ObjectReaders;
 
 public class PdfObjectReader(
   IStreamHelper streamHelper,
@@ -55,7 +55,7 @@ public class PdfObjectReader(
     if (objectStartBuffer[0] == 'n' && objectStartBuffer[1] == 'u')
       return await documentObjectReaderRepository.GetReader<NullObject>().Read(stream, objectRepository);
 
-    if ((objectStartBuffer[0] == 't' && objectStartBuffer[1] == 'r') || (objectStartBuffer[0] == 'f' && objectStartBuffer[1] == 'a'))
+    if (objectStartBuffer[0] == 't' && objectStartBuffer[1] == 'r' || objectStartBuffer[0] == 'f' && objectStartBuffer[1] == 'a')
       return await documentObjectReaderRepository.GetReader<BooleanObject>().Read(stream, objectRepository);
 
     throw new NotImplementedException("The object type passed was not yet implemented.");

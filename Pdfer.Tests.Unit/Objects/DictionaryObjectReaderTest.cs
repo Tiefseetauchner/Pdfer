@@ -1,8 +1,10 @@
-using System.IO;
-using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using Pdfer.Objects;
+using Pdfer.Objects.ObjectReaders;
+using Pdfer.Objects.Readers;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Pdfer.Tests.Unit.Objects;
 
@@ -92,22 +94,22 @@ public class DictionaryObjectReaderTest
   public async Task Read_HexStringObject()
   {
     using var stream = new MemoryStream(
-      "<</TestKey <A7895t287639>>>"u8.ToArray());
+      "<</TestKey <A7895287639>>>"u8.ToArray());
 
     var result = await _dictionaryObjectReader.Read(stream, _objectRepository.Object);
 
-    TypeAssert.VerifyInstanceOf<StringObject>(result.Value["TestKey"], _ => Assert.That(_.Value, Is.EqualTo("<A7895t287639>")));
+    TypeAssert.VerifyInstanceOf<StringObject>(result.Value["TestKey"], _ => Assert.That(_.Value, Is.EqualTo("<A7895287639>")));
   }
 
   [Test]
   public async Task Read_HexStringObject_WithoutSpace()
   {
     using var stream = new MemoryStream(
-      "<</TestKey<A7895t287639>>>"u8.ToArray());
+      "<</TestKey<A7895287639>>>"u8.ToArray());
 
     var result = await _dictionaryObjectReader.Read(stream, _objectRepository.Object);
 
-    TypeAssert.VerifyInstanceOf<StringObject>(result.Value["TestKey"], _ => Assert.That(_.Value, Is.EqualTo("<A7895t287639>")));
+    TypeAssert.VerifyInstanceOf<StringObject>(result.Value["TestKey"], _ => Assert.That(_.Value, Is.EqualTo("<A7895287639>")));
   }
 
   [Test]

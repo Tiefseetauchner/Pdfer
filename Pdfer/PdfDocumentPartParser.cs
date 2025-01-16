@@ -1,9 +1,10 @@
+using Pdfer.Objects;
+using Pdfer.Objects.ObjectReaders;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Pdfer.Objects;
 
 namespace Pdfer;
 
@@ -39,10 +40,12 @@ public class PdfDocumentPartParser(
             hasNextPart = integerObjectOffset.Value != 0;
             currentXrefOffset = integerObjectOffset.Value;
             break;
+
           case IndirectObject { Value: IntegerObject integerObjectOffset }:
             hasNextPart = integerObjectOffset.Value != 0;
             currentXrefOffset = integerObjectOffset.Value;
             break;
+
           default:
             throw new InvalidOperationException($"Key '/Prev' of trailer dictionary was of type {prevXRefOffset?.GetType()} but expected {typeof(IntegerObject)}.");
         }

@@ -2,7 +2,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects;
+namespace Pdfer.Objects.Serializers;
 
 public class NameObjectSerializer : IDocumentObjectSerializer<NameObject>
 {
