@@ -9,7 +9,7 @@ public class PdfDocumentPartParserFactory : IPdfDocumentPartParserFactory
   {
     var pdfObjectReader = PdfObjectReaderFactory.Create();
 
-    var indirectPdfObjectReaderAdapter = new IndirectPdfObjectReaderAdapter(
+    var indirectPdfObjectReaderAdapter = new IndirectPdfObjectReader(
       pdfObjectReader);
 
     var pdfDictionaryHelper = new PdfDictionaryHelper(pdfObjectReader);

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects.ObjectReaders;
 
-public class IndirectPdfObjectReaderAdapter(IPdfObjectReader adaptee) : IIndirectPdfObjectReaderAdapter
+public class IndirectPdfObjectReader(IPdfObjectReader adaptee) : IIndirectPdfObjectReader
 {
   public async Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, ObjectRepository objectRepository)
   {

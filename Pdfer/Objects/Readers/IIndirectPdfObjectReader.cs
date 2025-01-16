@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects.ObjectReaders;
 
-public interface IIndirectPdfObjectReaderAdapter
+public interface IIndirectPdfObjectReader
 {
   Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, ObjectRepository objectRepository);
 }

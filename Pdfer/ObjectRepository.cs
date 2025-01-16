@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Pdfer;
 
 public class ObjectRepository(
-  IIndirectPdfObjectReaderAdapter pdfObjectReader,
+  IIndirectPdfObjectReader pdfObjectReader,
   XRefTable xRefTable) : IObjectRepository
 {
   public Dictionary<ObjectIdentifier, DocumentObject> Objects { get; } = new();
