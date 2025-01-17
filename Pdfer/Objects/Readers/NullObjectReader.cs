@@ -17,7 +17,7 @@ public class NullObjectReader : IDocumentObjectReader<NullObject>
     var bufferText = Encoding.Default.GetString(buffer);
 
     if (read != 4 || bufferText != "null")
-      throw new InvalidDataException($"Expected 'null' but got {bufferText}");
+      throw new PdfInvalidNullObjectValueParsingException($"Expected 'null' but got '{bufferText}'");
 
     return new NullObject();
   }

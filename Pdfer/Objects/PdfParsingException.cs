@@ -11,3 +11,5 @@ public class PdfInvalidBooleanValueParsingException(string message) : PdfParsing
 public class PdfInvalidHexStringValueParsingException(string message) : PdfParsingException(message);
 
 public class PdfInvalidLiteralStringValueParsingException(string message) : PdfParsingException(message);
+
+public class PdfInvalidNullObjectValueParsingException(string message) : PdfParsingException(message);
