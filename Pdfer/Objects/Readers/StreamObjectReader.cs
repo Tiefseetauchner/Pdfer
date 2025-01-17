@@ -1,21 +1,17 @@
-using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects.ObjectReaders;
+namespace Pdfer.Objects.Readers;
 
 public class StreamObjectReader(
-  IDocumentObjectReader dictionaryObjectReader) : IDocumentObjectReader<StreamObject>
+  IDocumentObjectReader<DictionaryObject> dictionaryObjectReader) : IDocumentObjectReader<StreamObject>
 {
   async Task<DocumentObject> IDocumentObjectReader.Read(Stream stream, IObjectRepository objectRepository) =>
     await Read(stream, objectRepository);
 
   public async Task<StreamObject> Read(Stream stream, IObjectRepository objectRepository)
   {
-    var dictionary = await dictionaryObjectReader.Read(stream, objectRepository);
-
-    if (dictionary is not DictionaryObject dictionaryObject)
-      throw new InvalidOperationException("Stream did not start with a dictionary object.");
+    var dictionaryObject = await dictionaryObjectReader.Read(stream, objectRepository);
 
     var oldPosition = stream.Position;
     var lengthObject = dictionaryObject.Value["Length"];
@@ -23,8 +19,8 @@ public class StreamObjectReader(
     {
       IntegerObject integerObject => integerObject.Value,
       ReferenceObject referenceObject => (referenceObject.Value as IntegerObject)?.Value
-                                       ?? throw new InvalidOperationException($"Object referenced by key '/Length' of stream object was of type {referenceObject.Value?.GetType()} but expected {typeof(IntegerObject)}."),
-      _ => throw new InvalidOperationException($"Key '/Length' of stream object was of type {lengthObject.GetType()} but expected {typeof(IntegerObject)}.")
+                                         ?? throw new PdfInvalidIndirectObjectReferenceParsingException($"Object referenced by key '/Length' of stream object was of type {referenceObject.Value?.GetType()} but expected {typeof(IntegerObject)}."),
+      _ => throw new PdfInvalidIndirectObjectReferenceParsingException($"Key '/Length' of stream object was of type {lengthObject.GetType()} but expected {typeof(IntegerObject)}.")
     };
     stream.Position = oldPosition;
 

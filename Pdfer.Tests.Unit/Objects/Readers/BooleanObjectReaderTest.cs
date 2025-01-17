@@ -1,10 +1,10 @@
-using NUnit.Framework;
-using Pdfer.Common.Tests;
-using Pdfer.Objects;
-using Pdfer.Objects.ObjectReaders;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using NUnit.Framework;
+using Pdfer.Common.Tests;
+using Pdfer.Objects;
+using Pdfer.Objects.Readers;
 
 namespace Pdfer.Tests.Unit.Objects.Readers;
 

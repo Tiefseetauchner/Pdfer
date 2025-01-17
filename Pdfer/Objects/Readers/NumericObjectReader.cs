@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects.ObjectReaders;
+namespace Pdfer.Objects.Readers;
 
 public class NumericObjectReader : IDocumentObjectReader<NumericObject>
 {

@@ -2,7 +2,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pdfer.Objects.ObjectReaders;
+namespace Pdfer.Objects.Readers;
 
 public class NullObjectReader : IDocumentObjectReader<NullObject>
 {

@@ -1,4 +1,4 @@
-﻿namespace Pdfer.Objects.ObjectReaders;
+﻿namespace Pdfer.Objects.Readers;
 
 public interface IDocumentObjectReaderRepository
 {

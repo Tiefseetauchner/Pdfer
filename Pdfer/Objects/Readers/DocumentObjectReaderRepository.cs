@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Pdfer.Objects.ObjectReaders;
+namespace Pdfer.Objects.Readers;
 
 public class DocumentObjectReaderRepository : IDocumentObjectReaderRepository
 {

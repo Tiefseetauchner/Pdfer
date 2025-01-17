@@ -1,11 +1,10 @@
+using System.IO;
+using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using Pdfer.Common.Tests;
 using Pdfer.Objects;
-using Pdfer.Objects.ObjectReaders;
 using Pdfer.Objects.Readers;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace Pdfer.Tests.Unit.Objects.Readers;
 

@@ -1,5 +1,3 @@
-using Pdfer.Objects.ObjectReaders;
-
 namespace Pdfer.Objects.Readers;
 
 public static class PdfObjectReaderFactory

@@ -1,9 +1,9 @@
-﻿using NUnit.Framework;
-using Pdfer.Objects.ObjectReaders;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NUnit.Framework;
+using Pdfer.Objects.Readers;
 
 namespace Pdfer.Tests.Unit.Objects.Readers
 {
