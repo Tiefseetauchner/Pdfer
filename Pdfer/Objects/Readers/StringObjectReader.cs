@@ -48,6 +48,9 @@ public class StringObjectReader() : IDocumentObjectReader<StringObject>
         break;
     }
 
+    if (stringBuilder[^1] != ')')
+      throw new PdfInvalidLiteralStringValueParsingException("Literal string was not closed.");
+
     return stringBuilder.ToString();
   }
 
@@ -69,6 +72,9 @@ public class StringObjectReader() : IDocumentObjectReader<StringObject>
       if (!c_validHexCharacters.Contains(nextCharacter))
         throw new PdfInvalidHexStringValueParsingException($"Character '{nextCharacter}' is not valid in the context of a hexadecimal string.");
     }
+
+    if (stringBuilder[^1] != '>')
+      throw new PdfInvalidHexStringValueParsingException("Hexadecimal string was not closed.");
 
     return stringBuilder.ToString();
   }

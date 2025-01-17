@@ -15,3 +15,9 @@ public class PdfInvalidLiteralStringValueParsingException(string message) : PdfP
 public class PdfInvalidNullObjectValueParsingException(string message) : PdfParsingException(message);
 
 public class PdfInvalidStreamEndParsingException(string message) : PdfParsingException(message);
+
+public class PdfInvalidArrayParsingException(string message) : PdfParsingException(message);
+
+public class PdfInvalidNameParsingException(string message) : PdfParsingException(message);
+
+public class PdfInvalidNumberParsingException(string message) : PdfParsingException(message);

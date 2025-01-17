@@ -28,7 +28,7 @@ public class NumericObjectReader : IDocumentObjectReader<NumericObject>
       if (buffer[0] == '.')
       {
         if (isDecimal)
-          throw CreateInvalidFormattingException();
+          throw new PdfInvalidNumberParsingException("Number contains multiple decimal points.");
 
         isDecimal = true;
 
@@ -51,7 +51,4 @@ public class NumericObjectReader : IDocumentObjectReader<NumericObject>
 
     return new FloatObject(number / Math.Pow(10, decimalDividerExponent));
   }
-
-  private static InvalidOperationException CreateInvalidFormattingException() =>
-    new("Number Object is not a valid number.");
 }

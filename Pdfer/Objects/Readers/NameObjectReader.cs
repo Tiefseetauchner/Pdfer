@@ -14,10 +14,11 @@ public class NameObjectReader : IDocumentObjectReader<NameObject>
     var name = new StringBuilder();
     var nextByte = new byte[1];
 
-    var firstChar = await stream.ReadAsync(nextByte);
+    if (await stream.ReadAsync(nextByte) < 1)
+      throw new IOException("Unexpected end of stream");
 
-    if (firstChar < 1 || nextByte[0] != 47)
-      throw new IOException("Name Object is not a valid name.");
+    if (nextByte[0] != '/')
+      throw new PdfInvalidNameParsingException("Name Object is not a valid name.");
 
     while (await stream.ReadAsync(nextByte) != 0)
     {

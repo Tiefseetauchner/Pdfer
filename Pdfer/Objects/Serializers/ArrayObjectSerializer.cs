@@ -10,6 +10,14 @@ public class ArrayObjectSerializer(IDocumentObjectSerializerRepository objectSer
 
   public async Task Serialize(Stream stream, ArrayObject documentObject)
   {
-    await PdfArrayHelper.WriteArray(stream, documentObject.Value, objectSerializerRepository);
+    await stream.WriteAsync("[ "u8.ToArray());
+
+    foreach (var value in documentObject.Value)
+    {
+      await objectSerializerRepository.GetSerializer(value).Serialize(stream, value);
+      await stream.WriteAsync(" "u8.ToArray());
+    }
+
+    await stream.WriteAsync("]"u8.ToArray());
   }
 }

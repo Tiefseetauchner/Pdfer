@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Moq;
@@ -313,6 +314,24 @@ public class PdfObjectReaderTest
 
     TypeAssert.VerifyInstanceOf<StringObject>(result, _ => Assert.That(_.Value, Is.EqualTo("<123456ABCD>")));
     VerifyStreamStoppedCorrectly(stream);
+  }
+
+  [Test]
+  public void Read_EarlyEndOfStream_Throws()
+  {
+    using var stream = new MemoryStream("<"u8.ToArray());
+    var exception = Assert.ThrowsAsync<IOException>(() => _reader.Read(stream, _objectRepository.Object));
+
+    Assert.That(exception.Message, Is.EqualTo("Unexpected end of stream"));
+  }
+
+  [Test]
+  public void Read_UnknownObject_Throws()
+  {
+    using var stream = new MemoryStream("joe hills"u8.ToArray());
+    var exception = Assert.ThrowsAsync<NotImplementedException>(() => _reader.Read(stream, _objectRepository.Object));
+
+    Assert.That(exception.Message, Is.EqualTo("The object type passed was not yet implemented."));
   }
 
   private static void VerifyStreamStoppedCorrectly(Stream stream, byte[]? expected = null)

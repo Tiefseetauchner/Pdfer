@@ -1,21 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <RootNamespace>Pdfer.Common.Tests</RootNamespace>
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>false</IsTestProject>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <RootNamespace>Pdfer.Common.Tests</RootNamespace>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>false</IsTestProject>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="NUnit" />
-    <PackageReference Include="NUnit.Analyzers" />
-    <PackageReference Include="Moq" />
-  </ItemGroup>
-  
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="NUnit"/>
+        <PackageReference Include="NUnit.Analyzers"/>
+        <PackageReference Include="Moq"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Pdfer\Pdfer.csproj"/>
+    </ItemGroup>
+
 </Project>

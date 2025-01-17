@@ -16,7 +16,7 @@ public class ArrayObjectReader(IPdfObjectReader pdfObjectReader) : IDocumentObje
     var firstChar = StreamHelper.ReadChar(stream);
 
     if (firstChar != '[')
-      throw new IOException($"Could not parse array: Expected '[' but got '{firstChar}'");
+      throw new PdfInvalidArrayParsingException($"Invalid array start. Expected '[' but got '{firstChar}'");
 
     await StreamHelper.SkipWhiteSpaceCharacters(stream);
 
@@ -28,7 +28,7 @@ public class ArrayObjectReader(IPdfObjectReader pdfObjectReader) : IDocumentObje
     }
 
     // NOTE: We have to skip the closing ']' character here.
-    StreamHelper.ReadChar(stream);
+    _ = await stream.ReadAsync(new byte[1]);
 
     return new ArrayObject(objects.ToArray());
   }

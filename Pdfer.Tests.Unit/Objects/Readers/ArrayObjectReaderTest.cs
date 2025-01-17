@@ -122,4 +122,26 @@ public class ArrayObjectReaderTest
       Assert.That(arrayObjectResult.Value, Has.Length.EqualTo(i));
     });
   }
+
+  [Test]
+  public void Read_Invalid_MissingClosingBracket()
+  {
+    var arrayObject = "[ 100     200  \r\n\t\t\r\n      300 }"u8.ToArray();
+    using var stream = new MemoryStream(arrayObject);
+
+    var exception = Assert.ThrowsAsync<IOException>(() => _arrayObjectReader.Read(stream, _objectRepository.Object));
+
+    Assert.That(exception.Message, Is.EqualTo("Unexpected end of stream"));
+  }
+
+  [Test]
+  public void Read_Invalid_MissingOpeningBracket()
+  {
+    var arrayObject = "100     200  \r\n\t\t\r\n      300 "u8.ToArray();
+    using var stream = new MemoryStream(arrayObject);
+
+    var exception = Assert.ThrowsAsync<PdfInvalidArrayParsingException>(() => _arrayObjectReader.Read(stream, _objectRepository.Object));
+
+    Assert.That(exception.Message, Is.EqualTo($"Invalid array start. Expected '[' but got '1'"));
+  }
 }

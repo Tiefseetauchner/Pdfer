@@ -97,9 +97,18 @@ endstream"u8.ToArray());
   public void Read_InvalidStreamEnd()
   {
     using var stream = new MemoryStream(@"<</Filter/FlateDecode/Length 16>>stream
-1234567890ABCDEF1234567890ABCDEF
+1234567890ABCDEF
 endstieamContentAfterStream"u8.ToArray());
 
     Assert.ThrowsAsync<PdfInvalidStreamEndParsingException>(() => _reader.Read(stream, _objectRepository.Object));
+  }
+
+  [Test]
+  public void Read_UnexpectedStreamEnd()
+  {
+    using var stream = new MemoryStream(@"<</Filter/FlateDecode/Length 16>>stream
+1234567890ABCDE"u8.ToArray());
+
+    Assert.ThrowsAsync<IOException>(() => _reader.Read(stream, _objectRepository.Object));
   }
 }

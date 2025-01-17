@@ -1,10 +1,10 @@
-﻿using Moq;
+﻿using System.IO;
+using System.Threading.Tasks;
+using Moq;
 using NUnit.Framework;
 using Pdfer.Common.Tests;
 using Pdfer.Objects;
 using Pdfer.Objects.Readers;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace Pdfer.Tests.Unit.Objects;
 
@@ -197,5 +197,18 @@ endobj"u8.ToArray());
 
     TypeAssert.VerifyInstanceOf<StringObject>(result, stringObject =>
       Assert.That(stringObject.Value, Is.EqualTo(@"<AFFE1234CAFFEE>")));
+  }
+
+  [Test]
+  public void Read_DoesNotBeginWithObject()
+  {
+    using var stream = new MemoryStream(@"1 0 2 obj
+endobj"u8.ToArray());
+    var objectRepository = new Mock<IObjectRepository>();
+    var reader = new IndirectPdfObjectReader(PdfObjectReaderFactory.Create());
+
+    var exception = Assert.ThrowsAsync<PdfInvalidIndirectObjectReferenceParsingException>(() => reader.Read(stream, new XRefEntry(0, XRefEntryType.Used), objectRepository.Object));
+
+    Assert.That(exception.Message, Is.EqualTo("Indirect object did not start with an object identifier."));
   }
 }
