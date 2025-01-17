@@ -13,3 +13,5 @@ public class PdfInvalidHexStringValueParsingException(string message) : PdfParsi
 public class PdfInvalidLiteralStringValueParsingException(string message) : PdfParsingException(message);
 
 public class PdfInvalidNullObjectValueParsingException(string message) : PdfParsingException(message);
+
+public class PdfInvalidStreamEndParsingException(string message) : PdfParsingException(message);

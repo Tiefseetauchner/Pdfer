@@ -2,7 +2,7 @@ namespace Pdfer.Objects.Readers;
 
 public static class PdfObjectReaderFactory
 {
-  public static IPdfObjectReader Create()
+  public static PdfObjectReader Create()
   {
     var documentObjectReaderRepository = new DocumentObjectReaderRepository();
 

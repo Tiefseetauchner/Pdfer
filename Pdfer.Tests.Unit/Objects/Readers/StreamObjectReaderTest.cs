@@ -92,4 +92,14 @@ endstream"u8.ToArray());
 
     Assert.ThrowsAsync<PdfInvalidIndirectObjectReferenceParsingException>(() => _reader.Read(stream, _objectRepository.Object));
   }
+
+  [Test]
+  public void Read_InvalidStreamEnd()
+  {
+    using var stream = new MemoryStream(@"<</Filter/FlateDecode/Length 16>>stream
+1234567890ABCDEF1234567890ABCDEF
+endstieamContentAfterStream"u8.ToArray());
+
+    Assert.ThrowsAsync<PdfInvalidStreamEndParsingException>(() => _reader.Read(stream, _objectRepository.Object));
+  }
 }

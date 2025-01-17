@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Pdfer.Objects.Readers;
@@ -33,6 +34,19 @@ public class StreamObjectReader(
     if (bytesRead != length)
       throw new IOException("Unexpected end of stream");
 
+    await ReadEndStream(stream);
+
     return new StreamObject(buffer, dictionaryObject);
+  }
+
+  private static async Task ReadEndStream(Stream stream)
+  {
+    await StreamHelper.SkipWhiteSpaceCharacters(stream);
+
+    var buffer = new byte[9];
+    var read = await stream.ReadAsync(buffer);
+    var bufferText = Encoding.Default.GetString(buffer);
+    if (read != 9 || bufferText != "endstream")
+      throw new PdfInvalidStreamEndParsingException($"Expected 'endstream' but got '{bufferText}'");
   }
 }
