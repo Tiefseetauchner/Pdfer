@@ -1,8 +1,8 @@
-using Pdfer.Objects;
-using Pdfer.Objects.Serializers;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Pdfer.Objects;
+using Pdfer.Objects.Serializers;
 
 namespace Pdfer;
 
@@ -63,12 +63,12 @@ public class PdfDictionaryHelper(
 
     foreach (var (key, value) in dictionary)
     {
-      await stream.WriteAsync("\n"u8.ToArray());
+      await stream.WriteAsync(" "u8.ToArray());
       await documentObjectSerializerRepository.GetSerializer<NameObject>().Serialize(stream, key);
       await stream.WriteAsync(" "u8.ToArray());
       await documentObjectSerializerRepository.GetSerializer(value).Serialize(stream, value);
     }
 
-    await stream.WriteAsync(">>"u8.ToArray());
+    await stream.WriteAsync(" >>"u8.ToArray());
   }
 }

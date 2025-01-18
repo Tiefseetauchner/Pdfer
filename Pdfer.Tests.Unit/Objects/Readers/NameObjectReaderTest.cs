@@ -67,6 +67,15 @@ public class NameObjectReaderTest
   }
 
   [Test]
+  public async Task Read_ContainsUnicodeCharacter()
+  {
+    using var stream = new MemoryStream("/NämÖbθεkt"u8.ToArray());
+    var result = await _reader.Read(stream, null!);
+
+    Assert.That(result.Value, Is.EqualTo("NämÖbθεkt"));
+  }
+
+  [Test]
   public void Read_UnexpectedStreamEnd_Throws()
   {
     using var stream = new MemoryStream(""u8.ToArray());
