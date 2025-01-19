@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using Pdfer.Objects.Serializers;
 
-namespace Pdfer.Tests.Unit;
+namespace Pdfer.Tests.Unit.Objects.Serializers;
 
 public class DocumentObjectSerializerRepositoryFactoryTest
 {

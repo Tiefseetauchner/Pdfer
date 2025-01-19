@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Pdfer.Objects.Serializers;
 
-public class NumericObjectSerializer() : IDocumentObjectSerializer<NumericObject>
+public class NumericObjectSerializer : IDocumentObjectSerializer<NumericObject>
 {
   async Task IDocumentObjectSerializer.Serialize(Stream stream, DocumentObject documentObject) =>
     await Serialize(stream, (NumericObject)documentObject);

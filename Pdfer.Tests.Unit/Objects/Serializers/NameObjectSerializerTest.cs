@@ -21,9 +21,9 @@ public class NameObjectSerializerTest
   public async Task Serialize()
   {
     using var memoryStream = new MemoryStream();
-    var dictionaryObject = ObjectBuilder.NameObject("NameObject");
+    var nameObject = ObjectBuilder.NameObject("NameObject");
 
-    await _serializer.Serialize(memoryStream, dictionaryObject);
+    await _serializer.Serialize(memoryStream, nameObject);
     var result = Encoding.Default.GetString(memoryStream.ToArray());
 
     Assert.That(result, Is.EqualTo("/NameObject"));
@@ -33,9 +33,9 @@ public class NameObjectSerializerTest
   public async Task Serialize_SpecialCharacters()
   {
     using var memoryStream = new MemoryStream();
-    var dictionaryObject = ObjectBuilder.NameObject("Name***Object_With-Special;Characters");
+    var nameObject = ObjectBuilder.NameObject("Name***Object_With-Special;Characters");
 
-    await _serializer.Serialize(memoryStream, dictionaryObject);
+    await _serializer.Serialize(memoryStream, nameObject);
     var result = Encoding.Default.GetString(memoryStream.ToArray());
 
     Assert.That(result, Is.EqualTo("/Name***Object_With-Special;Characters"));
@@ -45,9 +45,9 @@ public class NameObjectSerializerTest
   public async Task Serialize_UnicodeCharacters()
   {
     using var memoryStream = new MemoryStream();
-    var dictionaryObject = ObjectBuilder.NameObject("NämÖbθεkt");
+    var nameObject = ObjectBuilder.NameObject("NämÖbθεkt");
 
-    await _serializer.Serialize(memoryStream, dictionaryObject);
+    await _serializer.Serialize(memoryStream, nameObject);
     var result = Encoding.Default.GetString(memoryStream.ToArray());
 
     Assert.That(result, Is.EqualTo("/NämÖbθεkt"));
