@@ -1,0 +1,9 @@
+using System.IO;
+using System.Threading.Tasks;
+
+namespace Pdfer.Objects;
+
+public interface IIndirectPdfObjectReader
+{
+  Task<DocumentObject> Read(Stream stream, XRefEntry xRefEntry, IObjectRepository objectRepository);
+}

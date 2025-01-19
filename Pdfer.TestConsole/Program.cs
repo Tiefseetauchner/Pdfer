@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Pdfer.Objects;
+using System;
 using System.IO;
 using System.Threading.Tasks;
-using Pdfer.Objects;
 
 namespace Pdfer.TestConsole;
 
-class Program
+internal class Program
 {
-  static async Task Main(string[] args)
+  private static async Task Main(string[] args)
   {
     Console.WriteLine("Hello Pdfer!");
 
@@ -15,7 +15,7 @@ class Program
 
     var infoDictionary = pdfDocument.DocumentParts[0].Trailer.TrailerDictionary["Info"] switch
     {
-      IndirectObject indirectObject => pdfDocument.DocumentParts[0].Body[indirectObject.ObjectIdentifier] as DictionaryObject
+      ReferenceObject referenceObject => pdfDocument.DocumentParts[0].Body[referenceObject.ObjectIdentifier] as DictionaryObject
                                        ?? throw new InvalidOperationException("Info dictionary not found"),
       DictionaryObject dictionaryObject => dictionaryObject,
       _ => throw new InvalidOperationException("Info dictionary not found")

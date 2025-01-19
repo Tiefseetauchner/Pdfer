@@ -2,11 +2,11 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Pdfer.Objects;
+using Pdfer.Objects.Serializers;
 
 namespace Pdfer;
 
 public class PdfDictionaryHelper(
-  IStreamHelper streamHelper,
   IPdfObjectReader pdfObjectReader) : IPdfDictionaryHelper
 {
   public async Task<PdfDictionary> ReadDictionary(Stream stream, IObjectRepository objectRepository)
@@ -19,9 +19,9 @@ public class PdfDictionaryHelper(
     if (await stream.ReadAsync(buffer) != 2 || buffer[0] != '<' || buffer[1] != '<')
       throw new InvalidOperationException("Dictionary does not start with '<<'");
 
-    await streamHelper.SkipWhiteSpaceCharacters(stream);
+    await StreamHelper.SkipWhiteSpaceCharacters(stream);
 
-    while (await streamHelper.Peak(stream, buffer) == 2 && !(buffer[0] == '>' && buffer[1] == '>'))
+    while (await StreamHelper.Peak(stream, buffer) == 2 && !(buffer[0] == '>' && buffer[1] == '>'))
     {
       var nextObject = await pdfObjectReader.Read(stream, objectRepository);
 
@@ -38,7 +38,7 @@ public class PdfDictionaryHelper(
         key = null;
       }
 
-      await streamHelper.SkipWhiteSpaceCharacters(stream);
+      await StreamHelper.SkipWhiteSpaceCharacters(stream);
     }
 
     // NOTE: We have to skip the closing '>>' character here.
@@ -63,12 +63,12 @@ public class PdfDictionaryHelper(
 
     foreach (var (key, value) in dictionary)
     {
-      await stream.WriteAsync("\n"u8.ToArray());
+      await stream.WriteAsync(" "u8.ToArray());
       await documentObjectSerializerRepository.GetSerializer<NameObject>().Serialize(stream, key);
       await stream.WriteAsync(" "u8.ToArray());
       await documentObjectSerializerRepository.GetSerializer(value).Serialize(stream, value);
     }
 
-    await stream.WriteAsync(">>"u8.ToArray());
+    await stream.WriteAsync(" >>"u8.ToArray());
   }
 }

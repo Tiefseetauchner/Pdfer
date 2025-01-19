@@ -1,12 +1,12 @@
+using Pdfer.Objects;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Pdfer.Objects;
 
 namespace Pdfer;
 
 public class ObjectRepository(
-  IIndirectPdfObjectReaderAdapter pdfObjectReader,
+  IIndirectPdfObjectReader pdfObjectReader,
   XRefTable xRefTable) : IObjectRepository
 {
   public Dictionary<ObjectIdentifier, DocumentObject> Objects { get; } = new();
